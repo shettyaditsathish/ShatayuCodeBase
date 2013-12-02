@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<project name="java" default="all">
+
+    <!--Read build.properties-->
+    <target name="init">
+        <property file="build.properties"/>
+    </target>
+
+    <!--Delete old directories-->
+    <target name="clean" depends="init">
+        <delete dir="${classes}" failonerror="false"/>
+    </target>
+
+    <target name="dist" depends="init">
+        <mkdir dir="${classes}"/>
+        <javac srcdir="${src}" destdir="${classes}"
+               debug="false" deprecation="true" optimize="true" fork="false">
+            
+			<classpath path="${lib}/flex-messaging-core.jar" />
+			<classpath location="${lib}/backport-util-concurrent.jar" />
+			<classpath location="${lib}/cfgatewayadapter.jar" />
+			<classpath location="${lib}/commons-codec-1.3.jar" />
+			<classpath location="${lib}/commons-httpclient-3.0.1.jar" />
+			<classpath location="${lib}/commons-logging.jar" />
+			<classpath location="${lib}/concurrent.jar" />
+			<classpath location="${lib}/flex-messaging-common.jar" />
+			<classpath location="${lib}/flex-messaging-opt.jar" />
+			<classpath location="${lib}/flex-messaging-proxy.jar" />
+			<classpath location="${lib}/flex-messaging-remoting.jar" />
+			<classpath location="${lib}/xalan.jar" />
+			<classpath location="${libext}/servlet-api.jar" />
+			<classpath location="${lib}/hibernate3.jar" />
+			<classpath location="${lib}/spring.jar" />
+			<classpath location="${lib}/spring-beans.jar" />
+			<classpath location="${lib}/spring-core.jar" />
+			<classpath location="${lib}/spring-hibernate.jar" />
+			<classpath location="${lib}/spring-jdbc.jar" />
+			<classpath location="${lib}/spring-remoting.jar" />
+			<classpath location="${lib}/spring-web.jar" />
+			<classpath location="${lib}/spring-web.jar" />
+			<classpath location="${lib}/mail.jar" />
+        </javac>
+		<!--copy file="hbm/EmployeeDB.hbm.xml" todir="${classes}/com/shatayu/delegate"/-->
+    </target>
+
+	<target name="all" depends="clean,dist"/>
+   
+
+</project>

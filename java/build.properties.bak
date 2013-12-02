@@ -1,0 +1,10 @@
+# Source Path
+src=src
+
+# Classes Path
+classes=classes
+
+# Libraries
+lib=lib
+libext=libext
+
