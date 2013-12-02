@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%"
+	 height="100%">
+	 <mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
+			public var dataObj:Object;
+			
+			override public function set data(value:Object):void{
+				super.data = value;
+				if(value == null)return;
+				dataObj = value;
+				if(dataObj != null){
+					var duration:String = dataObj["duration"];
+					if(duration ==  null){
+						first.text ="";
+						second.text = "";
+						third.text = "";
+						return;
+					}
+					var arr:Array = duration.split("-");
+					if(arr.length <=0) return;
+					first.text = arr[0]
+					second.text = arr[1];
+					third.text = arr[2];
+				}
+			}
+			
+			private function onChange():void{
+				/* var firstText:String = isNaN(parseInt(first.text))?"0":parseInt(first.text)+"";
+				var secondText:String = isNaN(parseInt(second.text))?"0":parseInt(second.text)+"";
+				var thirdText:String = isNaN(parseInt(third.text))?"0":parseInt(third.text)+"";
+				if(firstText != "0" && secondText != "0" && thirdText != "0") */
+				dataObj.duration = first.text+"-"+second.text+"-"+third.text;
+			}
+			
+		]]>
+	</mx:Script>
+	 
+	 <mx:TextInput id="first" change="onChange()" width = "20"/>
+	 <mx:TextInput id="second" change="onChange()" width = "20"/>
+	 <mx:TextInput id="third" change="onChange()" width = "20"/>
+	 
+	
+</mx:HBox>

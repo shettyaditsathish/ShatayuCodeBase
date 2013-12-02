@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalGap="0" horizontalGap="0" borderStyle="solid" 
+	borderThickness="3" width="100%" height="100%">
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.model.Drug;
+			import com.shatayu.model.ModelLocatorImp;
+			import mx.collections.ArrayCollection;
+			[Bindable]
+			public var treatmenDrugtList:ArrayCollection;
+			
+			private function getDrugName(drugId:String):String{
+				var drugList:ArrayCollection = ModelLocatorImp.getInstance().drugList;
+				for(var i:uint = 0 ;i< drugList.length;i++){
+					trace(Drug(drugList.getItemAt(i)).drugId+ " Check the drug List values "+drugId);
+					if(Drug(drugList.getItemAt(i)).drugId+"" == drugId){
+						trace( " Check the drug List values "+Drug(drugList.getItemAt(i)).drugName);
+						return Drug(drugList.getItemAt(i)).drugName;
+					}
+				}
+				return "";
+			}
+			
+			override public function set data(value:Object):void{
+				super.data = value;
+				if(value == null)return;
+				treatmenDrugtList = value.treatmentDrug;
+			}
+			
+			
+			
+		]]>
+	</mx:Script>
+	<mx:Repeater id ="rp" dataProvider="{treatmenDrugtList}">
+		
+		<mx:HBox verticalGap="0" horizontalGap="0" borderStyle="solid"  borderThickness="1"
+			width="100%" height="90%">
+			<mx:VBox verticalGap="0" horizontalGap="0" width="100%" height="100%" borderStyle="solid"  borderThickness="1"
+				borderSides="right">
+				<mx:Label text="{getDrugName(rp.currentItem.drugId+'')}"/>
+				<mx:HRule width="100%" />
+				<mx:Label text="{rp.currentItem.duration}"/>	
+			</mx:VBox>
+			
+			<mx:Label text = "{'x' + rp.currentItem.noOfDays}" width="10%" height="100%"/>
+		</mx:HBox>
+	
+	</mx:Repeater>
+</mx:VBox>

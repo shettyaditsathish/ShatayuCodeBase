@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" width="20" height="20">
+	<mx:Script>
+		<![CDATA[
+			[Embed(source="/assets/right.jpg")]
+			private var rightImage:Class;
+			
+			[Embed(source="/assets/wrong.jpg")]
+			private var wrongImage:Class;
+			
+			override public function set data(value:Object):void{
+				super.data = value;
+				if(value == null)return;
+				if(value.paid == "Y"){
+					this.source = rightImage;
+				}else
+					this.source = wrongImage;
+				
+			}
+		]]>
+	</mx:Script>
+</mx:Image>

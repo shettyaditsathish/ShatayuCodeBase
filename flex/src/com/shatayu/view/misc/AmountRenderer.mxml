@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TextInput xmlns:mx="http://www.adobe.com/2006/mxml" change="onChange()">
+	<mx:Script>
+		<![CDATA[
+			public var dataObj:Object;
+			
+			override public function set data(value:Object):void{
+				super.data = value;
+				if(value == null)return;
+				dataObj = value;
+				if(dataObj != null){
+					var amountPaid:String = dataObj["amountPaid"] +"";
+					if(!isNaN(parseFloat(amountPaid))&& parseFloat(amountPaid)  > 0){
+						this.text = amountPaid;
+						dataObj["amount"] = amountPaid;
+						return;
+					}
+					text = "";
+				}
+			}
+			
+			private function onChange():void{
+				if(!isNaN(parseFloat(text)) && parseFloat(text) > 0){
+					dataObj["amount"] = parseFloat(text);
+				} 
+			}
+		]]>
+	</mx:Script>
+</mx:TextInput>

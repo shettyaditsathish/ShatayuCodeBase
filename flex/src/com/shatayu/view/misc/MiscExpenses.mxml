@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+	implements="com.shatayu.view.interfaces.IView">
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.util.BootStrap;
+			import com.shatayu.util.FileUtility;
+			import mx.controls.CheckBox;
+			import mx.containers.HBox;
+			import mx.controls.Alert;
+			import mx.containers.FormItem;
+			import mx.core.UIComponent;
+			public var expXML:XML = null;
+			
+			public function set viewData(obj:Object):void{				
+			}
+		
+			public function get viewData():Object{
+				return null;
+			}
+			
+			protected function onCreate():void{
+				expXML = BootStrap.getInstance().expXML;
+				totalLb.text = expXML.@total +"";
+				noofPatients.text = expXML.@noofpts +"";
+				noofworkingdays.text = expXML.@noofwkdys +"";
+				for each(var childXML:XML in expXML.children()){
+					entryContainer.addChild(getComponent(childXML.@name+"",childXML.@value+""));
+				}
+						
+			}
+			
+			
+			private function  createNew(expType:String):void{
+				currentState = "";
+				expTypeTextIp.text = "";
+				expXML.appendChild(new XML("<exp name='"+expType+"' value = '0'/>"));
+				entryContainer.addChild(getComponent(expType));
+				
+			}
+			
+			private function getComponent(expType:String,val:String=""):UIComponent{
+				var hBox:HBox = new HBox();
+				var checkBox:CheckBox = new CheckBox();
+				checkBox.label = "";
+				hBox.addChild(checkBox);
+				var formItem:FormItem = new FormItem();
+				formItem.label = expType;
+				
+				var textInp:TextInput = new TextInput();
+				textInp.text = val;
+				textInp.addEventListener(Event.CHANGE, onChange);
+				formItem.addChild(textInp);
+				hBox.addChild(formItem);
+				return hBox;
+			}
+			
+			private function onChange(ev:Event):void{
+				var lb:String  = FormItem(TextInput(ev.currentTarget).parent).label
+				var reqXML:XML = XML(expXML.exp.(@name == lb));
+				reqXML.@value = TextInput(ev.target).text;
+				calculate();
+			}
+			
+			private function onnoofPatentsChange():void{
+				var lb:String  = noofPatients.text;
+				expXML.@noofpts = lb;
+				calculate();
+			}
+			
+			private function onWKDysChange():void{
+				var lb:String  = noofworkingdays.text;
+				expXML.@noofwkdys = lb;
+				calculate();
+			}
+			
+			
+			
+			private function calculate():void{
+				if( isNaN( parseInt(noofPatients.text) )  )
+					return;
+				if( isNaN( parseInt(noofworkingdays.text) )  )
+					return;
+				var total:Number = 0;
+				for each(var reqXML:XML in expXML.children()){
+					total = total + parseInt(reqXML.@value);
+				}
+				
+				total = (total/parseInt(noofworkingdays.text))/parseInt(noofPatients.text)
+				total = Math.floor(Math.round(total));
+				expXML.@total = total +"";
+				totalLb.text = total + "";
+			}
+			
+			private function save():void{
+				//code to save xml pending
+				//Alert.show(expXML.toXMLString());
+				FileUtility.writeFile(expXML.toXMLString(),File.applicationStorageDirectory.nativePath + "/"+"exp.xml");
+			}
+			
+			private function onDelete():void{
+				for(var i:int = 0;i<entryContainer.numChildren;i++){
+					var child:HBox = entryContainer.getChildAt(i) as HBox;
+					var checkBox:CheckBox = child.getChildAt(0)  as CheckBox;
+					if(checkBox.selected){
+						var formItem:FormItem = child.getChildAt(1) as FormItem;
+						var lb:String = formItem.label;
+						var reqXML:XML = XML(expXML.exp.(@name == lb));
+						delete expXML.exp.(@name == lb)[0];
+						entryContainer.removeChild(child);
+						i--;
+					}
+				}
+			}
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="AddOrEditEntry">
+			<mx:AddChild relativeTo="{createBox}">
+			<mx:target>
+				<mx:VBox>
+					<mx:FormItem label="ExpenseType">
+						<mx:TextInput id = "expTypeTextIp" />
+					</mx:FormItem>
+					<mx:Button label = "AddItem" click="createNew(expTypeTextIp.text)"/>	
+				</mx:VBox>
+			</mx:target>
+			</mx:AddChild>
+		</mx:State>
+	</mx:states>
+	<mx:HBox>
+		<mx:VBox id = "createBox" >
+			<mx:FormItem label="Please click on the button to create a new entry ">
+				<mx:Button label = "Create entry" click="currentState = 'AddOrEditEntry'"/>
+			</mx:FormItem>	
+		</mx:VBox>
+		<mx:FormItem label="Please select a radio button and click on the button to delete a entry ">
+			<mx:Button label = "Delete entry" click="onDelete()"/>
+		</mx:FormItem>	
+	</mx:HBox>
+	<mx:Form id = "entryContainer" width="100%" creationComplete="onCreate()">
+		
+	</mx:Form>
+	<mx:FormItem label="Average no of patients per day">
+		<mx:TextInput id = "noofPatients" change="onnoofPatentsChange()"/>
+	</mx:FormItem>	
+	<mx:FormItem label="Number of Working days per month">
+		<mx:TextInput id = "noofworkingdays" change="onWKDysChange()"/>
+	</mx:FormItem>
+	<mx:FormItem label="Total">
+		<mx:TextInput id="totalLb" change="{expXML.@total = totalLb.text}"/>
+	</mx:FormItem>	
+	<mx:Button label = "Save" click = "save()"/>
+</mx:VBox>

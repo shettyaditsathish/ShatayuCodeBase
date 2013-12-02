@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="100%" height="100%" backgroundColor="#DAE6BD" title="Select Window"
+	headerColors="[#445B3F,#445B3F]" borderAlpha= "1"
+	creationComplete="currentState='restrictedUserState'">
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.event.ShatayuEvent;
+			import com.shatayu.event.ViewDataHolder;
+			import com.shatayu.view.controller.ViewController;
+			import com.shatayu.event.ViewEvent;
+			
+			private var _reduceSize:Boolean = false;
+			private var _reduceSizeChanged:Boolean = false;
+			
+			public function set reduceSize(value:Boolean):void{
+				_reduceSizeChanged = true;
+				//invalidateProperties();
+				//invalidateDisplayList();
+			}
+			
+			override protected function commitProperties():void
+    		{
+    			_reduceSizeChanged
+    			if(_reduceSizeChanged){
+    				_reduceSize = true;
+    			}
+    		}
+			
+			
+    		override protected function updateDisplayList(unscaledWidth:Number,
+                                                  unscaledHeight:Number):void
+		    {
+		        super.updateDisplayList(unscaledWidth, unscaledHeight);
+				/*if(_reduceSizeChanged){
+					_reduceSizeChanged = false;
+					if(_reduceSize){
+						this.width = 0;
+					}else{
+						this
+					}
+				}*/
+		              
+		    }
+			
+			public function showAddDrug():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.ADD_DRUG_VIEW;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function listAllDrug():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.LIST_DRUG_VIEW;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function showAddPanchKarma():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.ADD_PANCHKARMA_VIEW;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function listAllPanchkarma():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.LIST_PANCHKARMA_VIEW;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function showAddPatient():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.ADD_PATIENT_VIEW;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function showPatientsByName():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.LIST_PATIENT_BY_NAME_VIEW;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function showAllPatients():void{
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.LIST_ALL_PATIENTS_COMMAND,null);
+			 	event.dispatch();
+			}
+			
+			public function listTreatmentByDate():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.LIST_TREATMENTS_BY_DATE_VIEW;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function showOrganiser():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.ORGANISER_DISPLAY;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function showCharts():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.SHOW_CHARTS;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function showMailWindow():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.SHOW_EMAIL;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function showExpWindow():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.SHOW_EXP;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function showPanchCostWindow():void{
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.SHOW_PANCH_COST;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="restrictedUserState">
+			<mx:RemoveChild target="{lpAll}"/>
+			<mx:RemoveChild target="{newDrg}"/>
+			<mx:RemoveChild target="{newPanch}"/>
+			<mx:RemoveChild target="{allDrg}"/>
+			<mx:RemoveChild target="{allPanch}"/>
+			<mx:RemoveChild target="{treatmentByDate}"/>
+			<mx:RemoveChild target="{chId}"/>
+			<mx:RemoveChild target="{emlId}"/>
+			<mx:RemoveChild target="{expCalc}"/>
+			<mx:RemoveChild target="{panchCalc}"/>
+		</mx:State>
+	</mx:states>
+	<mx:VBox width="100%" height="100%" horizontalGap="0" verticalGap="15" paddingTop="15" horizontalAlign="center"
+		>
+		<mx:LinkButton label="List Patients By Name" id="lpbyName" click = "showPatientsByName()" styleName="myLink" width="160" />
+		<mx:LinkButton label="List All Patients" id="lpAll" click = "showAllPatients()" styleName="myLink" width="160"/>
+		<mx:LinkButton label="Add new Patient" id="newPatient" click="showAddPatient()" styleName="myLink" width="160"/>
+		<mx:LinkButton label="Add new Drug" id="newDrg" click="showAddDrug()" styleName="myLink" width="160"/>
+		<mx:LinkButton label="Add new Panchkarma" id="newPanch" click="showAddPanchKarma()" styleName="myLink" width="160"/>
+		<mx:LinkButton label="List all drugs" id="allDrg" click="listAllDrug()" styleName="myLink" width="160"/>
+		<mx:LinkButton label="List all Panchkarma" id="allPanch" click="listAllPanchkarma()" styleName="myLink" width="160"/>
+		<mx:LinkButton label="List Treatments By date" id="treatmentByDate" click="listTreatmentByDate()" styleName="myLink" width="160"/>
+		<mx:LinkButton label="Organiser" id="orgId" click="showOrganiser()" styleName="myLink" width="160"/>
+		<mx:LinkButton label="Charts" id="chId" click="showCharts()" styleName="myLink" width="160"/>
+		<mx:LinkButton label="Email" id="emlId" click="showMailWindow()" styleName="myLink" width="160"/>
+		<mx:LinkButton label="Exp Calculation" id="expCalc" click="showExpWindow()" styleName="myLink" width="160"/>
+		<mx:LinkButton label="Panchkarma Calcn" id="panchCalc" click="showPanchCostWindow()" styleName="myLink" width="160"/>
+	</mx:VBox>
+	
+</mx:Panel>

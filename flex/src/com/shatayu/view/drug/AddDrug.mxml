@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+	 implements="com.shatayu.view.interfaces.IView" creationComplete="onCreationComplete()"
+	 show ="onCreationComplete()" horizontalAlign="center"
+	 defaultButton="{submitBtn}">
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.command.AddDrugCommand;
+			import mx.binding.utils.BindingUtils;
+			import com.shatayu.event.ShatayuEvent;
+			import com.shatayu.model.Drug;
+			public var drug:Drug = new Drug();
+			
+			public function onCreationComplete():void{
+				drugName.text = drug.drugName;
+				cost.text = isNaN(drug.drugCost)?"":drug.drugCost +"";
+				contents.text = drug.drugContent;
+				quantity.text = isNaN(drug.quantity)?"":drug.quantity +"";
+				details.text = drug.details;
+				BindingUtils.bindProperty(drug,"drugName",drugName,"text");
+				BindingUtils.bindProperty(drug,"drugCost",cost,"text");
+				BindingUtils.bindProperty(drug,"drugContent",contents,"text");
+				BindingUtils.bindProperty(drug,"quantity",quantity,"text");
+				BindingUtils.bindProperty(drug,"details",details,"text");
+				
+				
+			}
+			
+			public function set viewData(obj:Object):void{
+				trace("Obj"+obj);
+				if(obj ==  null){
+					drug = new Drug();
+					if(drugName == null)return;
+	        		drugName.text = "" ;
+					cost.text = "";
+					contents.text = "";
+					quantity.text= "";
+					details.text = "";
+					onCreationComplete();				
+				}else{
+					drug = new Drug();
+					var drugTemp:Drug = obj as Drug;
+					drug.drugId = drugTemp.drugId;
+					drug.drugName = drugTemp.drugName;
+					drug.drugCost = drugTemp.drugCost; 
+					drug.drugContent = drugTemp.drugContent;
+					drug.quantity = drugTemp.quantity;
+					drug.details = drugTemp.details;
+				}
+				
+			}
+			
+			public function get viewData():Object{
+				return drug
+			}
+			
+			public function addDrug():void{
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.ADD_DRUG_COMMAND,drug);
+			 	event.dispatch();
+				
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Form>
+		<mx:FormItem label="Drug Name:" fontWeight="bold">
+			<mx:TextInput id = "drugName"/>
+		</mx:FormItem>
+		<mx:FormItem label="Drug Cost:" fontWeight="bold">
+			<mx:TextInput id = "cost"/>
+		</mx:FormItem>
+		<mx:FormItem label="Contents:" fontWeight="bold">
+			<mx:TextArea id = "contents"/>
+		</mx:FormItem>
+		<mx:FormItem label="Quatntity:" fontWeight="bold">
+			<mx:TextInput id = "quantity"/>
+		</mx:FormItem>
+		<mx:FormItem label="Details:" fontWeight="bold">
+			<mx:TextArea id = "details"/>
+		</mx:FormItem>
+		
+	</mx:Form>
+	<mx:Button id = "submitBtn" label="Add/Edit Drug"  styleName="myButton"/>
+	<mx:StringValidator source="{drugName}" property="text" 
+        required="true" requiredFieldError="This field is compulsory"
+        trigger="{submitBtn}" triggerEvent="click" valid="addDrug()"
+        />
+</mx:VBox>

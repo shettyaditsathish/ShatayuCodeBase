@@ -1,0 +1,777 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+	creationComplete="onCreationComplete()" show="onShow()" paddingLeft="40"
+	implements="com.shatayu.view.IChildView">
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.view.panchCost.PanchCostEvaluator;
+			import mx.rpc.Fault;
+			import mx.controls.Alert;
+			import mx.collections.Sort;
+			import mx.collections.SortField;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.event.ShatayuEvent;
+			import mx.collections.ArrayCollection;
+			import com.shatayu.model.Panchkarma;
+			import com.shatayu.model.ModelLocatorImp;
+			import com.adobe.cairngorm.model.ModelLocator;
+			import com.shatayu.model.Patient;
+			import mx.core.IFlexDisplayObject;
+			import mx.core.Application;
+			import mx.managers.PopUpManager;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import com.shatayu.model.Appointment;
+			import com.shatayu.model.Organiser;
+			import com.shatayu.model.PatientPanchkarma;
+			import com.shatayu.event.ViewDataHolder;
+			import com.shatayu.event.ViewEvent;
+			import com.shatayu.view.controller.ViewController;
+			
+			
+			[Bindable]
+			public var patient:Patient;
+			
+			[Bindable]
+			private var apptDetailsColl:ArrayCollection;
+			
+			private var _orgainser:Organiser = null;
+			
+			public var parentObj:Object;
+			private var _inEditMode:Boolean = false;
+			private var currentAmountPaid:Number = 0;
+			
+			public function onViewDisplay():void{
+				
+			}
+			
+			public function set appointment(value:Organiser):void{
+				reset();
+				_orgainser = value;
+				/* if(treatmentType != null)
+					onCreationComplete(); */
+			}
+			
+			private function onShow():void{
+				if(_inEditMode){
+					try{
+						_inEditMode = false;
+					}catch(e:Error){
+						
+					}
+				}else{
+					reset();
+				}
+			}
+			
+			public function set inEditMode(value:Boolean):void{
+				_inEditMode = value;
+				if(!_inEditMode){
+					try{
+						reset();	
+						//_inEditMode = false;
+					}catch(e:Error){
+						
+					}
+					
+				}else{
+					try{
+						prepopulate();	
+						
+						//_inEditMode = false;
+					}catch(e:Error){
+						
+					}
+					
+				}
+				
+				
+			}
+			
+			private function reset():void{
+				_orgainser = null;
+				patient = null;	
+				if(treatmentType == null){
+					return;
+				}
+				treatmentType.selectedIndex = 0;
+				treatmentDetails.text = "";
+				startDate.selectedDate = new Date();
+				endDate.selectedDate = new Date();
+				startDate.enabled  = true;
+				endDate.enabled = true; 
+				apptDetailsColl = null;
+				stHr.value = 1;
+				stMin.value = 0;
+				stP.selectedIndex = 0;
+				panchkarma.selectedIndex = -1;
+				
+				etHr.value = 1; 
+	        	etMin.value = 0;
+	        	etP.selectedIndex = 0;
+	        	status.text = "NC";
+	        	
+	        	stHr.enabled = true;
+	        	stMin.enabled = true;
+	        	
+	        	
+	        	etHr.enabled = true;
+	        	etMin.enabled = true;
+	        	stP.enabled =  true;
+	        	etP.enabled = true;
+	        	amountPaid.text="";
+	        	bal.text ="";
+	        	paidCurrent.text ="";
+	        	if(_orgainser){
+		        	if(_orgainser.balance == 0){
+						currentAmountPaid = _orgainser.amountPaid;
+						paidCurrent.text = _orgainser.amountPaid+"";
+					}else{
+						currentAmountPaid = _orgainser.balance;
+					}
+	        	}
+	        	
+			}
+			
+			private function prepopulate():void{
+				if(!_orgainser)
+					return;
+				patient = _orgainser.patient;
+				treatmentType.selectedIndex  = 1;
+	        	if(_orgainser.apptType == "Normal")
+	        		treatmentType.selectedIndex  = 1;
+	        	else
+	        		treatmentType.selectedIndex  = 0;
+	        	
+	        	if(treatmentType.selectedIndex == 1)
+	        		treatmentDetails.text = _orgainser.treatmentDetails;
+	        		
+	        	if(treatmentType.selectedIndex == 0){
+	        		var panchkarmaList:ArrayCollection =  ModelLocatorImp.getInstance().panchkarmaList;
+		        	for(var i:int =0;i<panchkarmaList.length;i++){
+		        		if(Panchkarma(panchkarmaList.getItemAt(i)).panchkarmaId == _orgainser.panchkarmaId){
+		        			panchkarma.selectedIndex = i;
+		        			break;
+		        		}
+		        	}
+	        	}
+	        	startDate.selectedDate = _orgainser.startDate;
+	        	
+	        	
+	        	endDate.selectedDate = _orgainser.endDate;
+	        	
+	        	amountPaid.text  = _orgainser.amountPaid+"";
+	        	amountStatus.selectedItem = (_orgainser.paid == null)?"N":_orgainser.paid;
+	        	bal.text = _orgainser.balance+"";
+	        	currentAmountPaid = _orgainser.amountPaid;
+	        	if(_orgainser.balance == 0){
+					currentAmountPaid = _orgainser.amountPaid;
+					paidCurrent.text = _orgainser.amountPaid+"";
+				}else{
+					currentAmountPaid = _orgainser.balance;
+				}
+	        	apptDetailsColl = _orgainser.appointment;
+	        	sortApptDate();
+	        	var apptDetail:Appointment = _orgainser.appointment.getItemAt(0) as Appointment;
+	        	stHr.value = (apptDetail.apptStartDate.hours >12)?(apptDetail.apptStartDate.hours -12 ):apptDetail.apptStartDate.hours; 
+	        	stMin.value = apptDetail.apptStartDate.minutes;
+	        	stP.selectedIndex = (apptDetail.apptStartDate.hours >=12)?1:0;
+	        	
+	        	etHr.value = (apptDetail.apptEndDate.hours >12)?(apptDetail.apptEndDate.hours -12 ):apptDetail.apptEndDate.hours; 
+	        	etMin.value = apptDetail.apptEndDate.minutes;
+	        	etP.selectedIndex = (apptDetail.apptEndDate.hours >=12)?1:0;
+	        	status.text = _orgainser.status == "" ?"NC":_orgainser.status;
+	        	
+	        	stHr.enabled = false;
+	        	stMin.enabled = false;
+	        	startDate.enabled = false;
+	        	endDate.enabled = false; 
+	        	etHr.enabled = false;
+	        	etMin.enabled = false;
+	        	stP.enabled =  false;
+	        	etP.enabled = false;
+	        	if(_orgainser.status == "C"){
+	        		completeTreatment.enabled = false;
+	        	}else{
+	        		completeTreatment.enabled = true;
+	        	}
+			}
+			
+			private function onCreationComplete():void{
+				trace("  _inEditMode AppForm oncreationComplete "+_inEditMode);
+				
+				if(!_inEditMode){
+					reset();
+					return;
+				}
+				prepopulate();
+				//_inEditMode = false;
+			}
+			
+			private function selectPatient():void{
+				var popUp:Object = PopUpManager.createPopUp(Application.application as DisplayObject,ListPatientsPopUP);
+				ListPatientsPopUP(popUp).parentObj = this;
+				PopUpManager.centerPopUp(popUp as IFlexDisplayObject);
+			}
+			
+			public function apptDetailsLableFunc(item:Object,column:DataGridColumn):String {
+				if(column.dataField+"" == "apptTime"){
+					 return getDateInFormate(Appointment(item).apptStartDate) + 
+						" ("+getTimeFormatted(Appointment(item).apptStartDate)+" - "+getTimeFormatted(Appointment(item).apptEndDate) +")"
+		          
+				}
+	   			return "";
+	    	}
+    	
+    		private function getTimeFormatted(dt:Date):String{
+				var hrs:Number = dt.getHours();
+				var min:Number = dt.getMinutes();
+				var offsetStr:String  = "am";
+				if(hrs >= 12){
+					if(hrs > 12)
+						hrs = hrs - 12;
+					offsetStr = "pm";
+				}
+				return hrs +":"+(((min+"").length == 1)?"0"+min:min) + ""+offsetStr;
+			}	
+			
+			private function getDateInFormate(dt:Date):String{
+	        	 return dt.getDate() + "-"+(dt.getMonth() + 1)+"-"+dt.getFullYear();
+	        }
+	        
+	        private function createAppointment():void{
+	        	if(!validate())return;
+	        	var org:Organiser = new Organiser();
+	        	if(_orgainser != null){
+	        		org = _orgainser; 
+	        	}
+	        	org.patient = patient;
+	        	org.apptType = treatmentType.selectedItem as String;
+	        	if(treatmentType.selectedIndex == 1)
+	        		org.treatmentDetails = treatmentDetails.text;
+	        	if(treatmentType.selectedIndex == 0)
+	        		org.panchkarmaId = Panchkarma(panchkarma.selectedItem).panchkarmaId;
+	        	org.startDate = startDate.selectedDate;
+	        	org.endDate = endDate.selectedDate;
+	        	org.amountPaid =  parseFloat(amountPaid.text);
+	        	org.paid = amountStatus.selectedItem as String;
+	        	org.balance = isNaN(parseFloat(bal.text))?0:parseFloat(bal.text);
+	        	trace("  _orgainser  "+_orgainser)
+	        	if(_orgainser == null){
+	        		org.appointment = generateAppointmentDetails(org);
+	        		trace(" org.appointment  "+org.appointment.length)
+	        	}	
+	        	
+        		var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.SAVE_APPOINTMENT_COMMAND,org,onAddAppointment);
+        		event.dispatch();	
+	        }
+	        
+	        private function validate():Boolean{
+	        	if(patient == null){
+	        		Alert.show("Please select a patient");
+	        		return false;
+	        	}
+	        	
+	        	if(isNaN(parseFloat(amountPaid.text)) || parseFloat(amountPaid.text)<=0){
+	        		amountPaid.errorString = "Enter Amount"; 
+					Alert.show("Enter the amount");
+					return false;
+	        	}
+	        	
+	        	
+	        	if(treatmentType.selectedIndex == -1){
+	        		Alert.show("Please select a Treatment type");
+	        		return false;
+	        	}	 
+	        	if(treatmentType.selectedIndex == 0 && panchkarma.selectedIndex == -1 ){
+	        		Alert.show("Please select a Panchkarma treatment");
+	        		return false;
+	        	}	
+	        	
+	        	if(endDate.selectedDate.getTime() < startDate.selectedDate.getTime()){
+	        		Alert.show("End Date should be greater than selected Date");
+	        		return false;
+	        	}
+	        	 if((stHr.value > 11 && stP.selectedIndex == 0) || (etHr.value > 11 && etP.selectedIndex == 0)){
+	        	 	Alert.show("Please verify you date");
+	        	 	return false;
+	        	 }
+	        	
+	        	if(isNaN(stHr.value) || isNaN(stMin.value)|| isNaN(etHr.value)|| isNaN(etMin.value)){
+	        		Alert.show("Please enter proper timing details some of the timing details are missing");
+	        		return false;
+	        	}else{
+	        		
+	        		if(etP.selectedIndex < stP.selectedIndex ){
+	        			Alert.show("End time should be greater than start time");
+	        			return false;
+	        		}
+	        		if(etP.selectedIndex == stP.selectedIndex){
+	        			var strNum:Number = Number(stHr.value);
+	        			var etrNum:Number = Number(etHr.value);
+	        			if((etP.selectedIndex == 1)){
+	        				if(strNum == 12)
+	        					strNum = 0;
+	        				if(etrNum == 12)
+	        					etrNum = 0;
+	        				
+	        			}
+	        			if(etrNum == strNum){
+	        				if(Number(etMin.value) > Number(stMin.value))
+	        				return true;
+	        			}
+	        			
+	        			if(etrNum > strNum)
+	        				return true;
+	        				
+        				Alert.show("End time should be greater than start time");
+        				return false;
+	        		}
+	        		
+	        		if(((Number(etHr.value) == Number(stHr.value)) && (etP.selectedIndex == stP.selectedIndex)) ){
+	        			Alert.show("End time should be greater than start time");
+	        			return false;
+	        		}
+	        	}
+	        	
+	        	
+	        	return true;       
+	        }
+	        
+	        public function onAddAppointment(obj:Object):void{
+	        	var org:Organiser = obj as Organiser;
+	        	_orgainser = org;
+	        	patient = _orgainser.patient;
+	        	if(_orgainser.status == "C"){
+	        		completeTreatment.enabled = false;
+	        	}else{
+	        		completeTreatment.enabled = true;
+	        	}
+	        	apptDetailsColl = org.appointment;
+	        	sortApptDate();
+	        	OrganiserDisplay(parentObj).mainPage.onAppointmentEditedCreatedDeleted();
+	        	stHr.enabled = false;
+	        	stMin.enabled = false;
+	        	startDate.enabled = false;
+	        	endDate.enabled = false; 
+	        	etHr.enabled = false;
+	        	etMin.enabled = false;
+	        	stP.enabled =  false;
+	        	etP.enabled = false;
+	        }
+	        
+	        private function generateAppointmentDetails(org:Organiser):ArrayCollection{
+	        	var arr:ArrayCollection = new ArrayCollection();
+	        	//var numOfDays:Number = (endDate.selectedDate.getDate() - startDate.selectedDate.getDate()) + 1;
+	        	var reqDate:Date= null;
+	        	var i:Number = 0;
+	        	do{
+	        		var apptDetailsStartDate:Date = new Date();
+	        		apptDetailsStartDate.date = startDate.selectedDate.date;
+					apptDetailsStartDate.month = startDate.selectedDate.month
+					apptDetailsStartDate.fullYear = startDate.selectedDate.fullYear;
+	        		apptDetailsStartDate.date = apptDetailsStartDate.date + (i);
+	        		reqDate = apptDetailsStartDate;
+	        		
+	        		var apptDetailStHr:Number =  Number(stHr.value);
+	        		if(apptDetailStHr == 12)
+	        				apptDetailStHr = 0;
+	        		if(stP.selectedItem+"" == "pm"){
+	        			
+	        			apptDetailStHr = apptDetailStHr + 12;
+	        		}
+	        		apptDetailsStartDate.hours = apptDetailStHr;
+	        		apptDetailsStartDate.minutes = Number(stMin.value);
+	        		
+	        		var apptDetailsEndDate:Date = new Date();
+	        		apptDetailsEndDate.date = startDate.selectedDate.date;
+					apptDetailsEndDate.month = startDate.selectedDate.month
+					apptDetailsEndDate.fullYear = startDate.selectedDate.fullYear;
+	        		apptDetailsEndDate.date = apptDetailsEndDate.date + (i);
+	        		var apptDetailEndHr:Number =  Number(etHr.value);
+	        		if(apptDetailEndHr == 12)
+	        				apptDetailEndHr = 0;
+	        		if(etP.selectedItem+"" == "pm"){
+	        			apptDetailEndHr = apptDetailEndHr + 12;
+	        		}
+	        		apptDetailsEndDate.hours = apptDetailEndHr;
+	        		apptDetailsEndDate.minutes = Number(etMin.value);
+	        		
+	        		var apptDetails:Appointment = new Appointment();
+	        		apptDetails.apptStartDate = apptDetailsStartDate;
+	        		apptDetails.apptEndDate = apptDetailsEndDate;
+	        		apptDetails.apptStatus = status.text;
+	        		apptDetails.organiser = org;
+	        		if(reqDate.day != 0){
+	        			arr.addItem(apptDetails);
+	        		}
+	        		
+	        		i++;
+	        	}while(!(reqDate.getFullYear() ==  endDate.selectedDate.getFullYear() &&
+	        	reqDate.getMonth() ==  endDate.selectedDate.getMonth()&&
+	        	reqDate.getDate() ==  endDate.selectedDate.getDate()) );
+	        	/* for(var i:int = 0 ;i<numOfDays;i++){
+	        		var apptDetailsStartDate:Date = new Date();
+	        		apptDetailsStartDate.date = startDate.selectedDate.date;
+					apptDetailsStartDate.month = startDate.selectedDate.month
+					apptDetailsStartDate.fullYear = startDate.selectedDate.fullYear;
+	        		apptDetailsStartDate.date = apptDetailsStartDate.date + i;
+	        		var apptDetailStHr:Number =  Number(stHr.value);
+	        		if(apptDetailStHr == 12)
+	        				apptDetailStHr = 0;
+	        		if(stP.selectedItem+"" == "pm"){
+	        			
+	        			apptDetailStHr = apptDetailStHr + 12;
+	        		}
+	        		apptDetailsStartDate.hours = apptDetailStHr;
+	        		apptDetailsStartDate.minutes = Number(stMin.value);
+	        		
+	        		var apptDetailsEndDate:Date = new Date();
+	        		apptDetailsEndDate.date = startDate.selectedDate.date;
+					apptDetailsEndDate.month = startDate.selectedDate.month
+					apptDetailsEndDate.fullYear = startDate.selectedDate.fullYear;
+	        		apptDetailsEndDate.date = apptDetailsEndDate.date + i;
+	        		var apptDetailEndHr:Number =  Number(etHr.value);
+	        		if(apptDetailEndHr == 12)
+	        				apptDetailEndHr = 0;
+	        		if(etP.selectedItem+"" == "pm"){
+	        			apptDetailEndHr = apptDetailEndHr + 12;
+	        		}
+	        		apptDetailsEndDate.hours = apptDetailEndHr;
+	        		apptDetailsEndDate.minutes = Number(etMin.value);
+	        		
+	        		var apptDetails:Appointment = new Appointment();
+	        		apptDetails.apptStartDate = apptDetailsStartDate;
+	        		apptDetails.apptEndDate = apptDetailsEndDate;
+	        		apptDetails.apptStatus = status.text;
+	        		apptDetails.organiser = org;
+	        		arr.addItem(apptDetails);
+	        	}  */
+	        	return arr;
+	        	
+	        }
+	        
+	        private function onSaveOrEditAppointment(type:String):void{
+	        	if(_orgainser == null)return;
+	        	if(type == "edit" && apptDtGrid.selectedItem == null)return;
+	        	var popup:IFlexDisplayObject = PopUpManager.createPopUp(this,AppointmentDetailsForm);
+	        	AppointmentDetailsForm(popup).parentObj = this;
+	        	AppointmentDetailsForm(popup).appointment = _orgainser;
+	        	
+	        	if(type == "edit" ){
+	        		AppointmentDetailsForm(popup).appointmentDetail = apptDtGrid.selectedItem as Appointment;
+	        	}
+	        		
+	        }
+	        
+	        public function onCreateOrEdit(appt:Appointment):void{
+	        	var appts:ArrayCollection = _orgainser.appointment;
+	        	
+	        	for(var i:int =0 ;i < appts.length ; i++){
+	        		trace("==========Appointment(appts.getItemAt(i))===="+Appointment(appts.getItemAt(i)) + "  "+appt)
+	        		if(Appointment(appts.getItemAt(i)).appointmentId == appt.appointmentId){
+		        			appts.setItemAt(appt,i);
+	        			
+	        			break;
+	        		}
+	        	}
+	        	
+	        	if(appts.getItemIndex(appt) == -1){
+	        		appts.addItem(appt);
+	        	}
+	        	apptDetailsColl = appts;
+	        	OrganiserDisplay(parentObj).mainPage.onAppointmentEditedCreatedDeleted();
+	        	adjustAppointmentDates();
+	        }
+	        
+	        private function deleteAppointment():void{
+	        	if(apptDtGrid.selectedItem == null)return;
+	        	var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.DELETE_APPOINTMENT_DETAILS_COMMAND,apptDtGrid.selectedItem,onDeleteAppointmentDetails);
+        		event.dispatch();
+        		OrganiserDisplay(parentObj).mainPage.onAppointmentEditedCreatedDeleted();
+	        }
+	        
+	        private function onDeleteAppointmentDetails(obj:Object):void{
+	        	apptDetailsColl.removeItemAt(apptDetailsColl.getItemIndex(obj as Appointment));
+	        	
+	        	
+        		
+	        	OrganiserDisplay(parentObj).mainPage.onAppointmentEditedCreatedDeleted();
+	        	adjustAppointmentDates();
+	        	
+	        }
+	        
+	        private function adjustAppointmentDates():void{
+	        	var saveFlag:Boolean = false;
+	        	var endAppt:Appointment = apptDetailsColl.getItemAt(apptDetailsColl.length - 1) as Appointment;
+	        	var startAppt:Appointment = apptDetailsColl.getItemAt(0) as Appointment;
+	        	if( endAppt.apptEndDate.getTime() < _orgainser.endDate.getTime() || 
+	        	 endAppt.apptEndDate.getTime() > _orgainser.endDate.getTime()){
+	        		saveFlag = true;
+	        		_orgainser.endDate = endAppt.apptEndDate;
+	        			
+	        	}
+	        	
+	        	if( startAppt.apptEndDate.getTime() > _orgainser.startDate.getTime() ||
+	        	startAppt.apptEndDate.getTime() < _orgainser.startDate.getTime()){
+	        		saveFlag = true;
+	        		_orgainser.startDate = startAppt.apptStartDate;
+	        			
+	        	}
+	        	
+	        	if(saveFlag){
+	        		var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.SAVE_APPOINTMENT_COMMAND,_orgainser,onSaveAppointment);
+        			event.dispatch();
+	        	}
+	        }
+	        
+	        private function onSaveAppointment(obj:Object):void{
+	        	if(obj is Fault){
+	        		Alert.show("Error"+obj);
+	        		return;
+	        	}
+	        	endDate.selectedDate = _orgainser.endDate;
+	        	startDate.selectedDate = _orgainser.startDate;
+	        	OrganiserDisplay(parentObj).mainPage.showDefaultAppointments();
+	        }
+	        
+	        private function sortApptDate():void{
+        	
+		        	if(apptDetailsColl != null){
+						var sort:Sort = new Sort();
+						var sortField:SortField = new SortField("apptStartDate", true , false);
+						sortField.compareFunction = sortDateDetails;
+					    sort.fields = [sortField];
+					    apptDetailsColl.sort = sort;
+					    apptDetailsColl.refresh();	
+					}
+	        }
+	        
+	       private function sortDateDetails(obj1:Object, obj2:Object):int{
+			  var d1:Number = (new Date(Date.parse(obj1.apptStartDate))).getTime();
+			  var d2:Number = (new Date(Date.parse(obj2.apptStartDate))).getTime();
+			  if(d1 < d2) {
+			    return -1;
+			  } else if(d1 == d2) {
+			    return 0;
+			  }
+			  return 1;
+			}
+			
+			private function onCompleteTreatment():void{
+				if(_orgainser.organiserId <= 0 && treatmentType.selectedIndex != 0 )return;
+				
+				if(treatmentType.selectedIndex == 1){
+					markAppointmentComplete();
+					var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+					viewDataHolder.viewType = ViewController.ADD_PATIENT_VIEW;
+					viewDataHolder.viewData = _orgainser.patient;
+					ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+					return;
+				}
+				
+				var panchtreatmentColl:ArrayCollection = Patient(_orgainser.patient).panchkarmaTreatment;
+				
+				var panchTreat:PatientPanchkarma = new PatientPanchkarma();
+				panchTreat.panchkarmaId = Panchkarma(panchkarma.selectedItem).panchkarmaId;
+				panchTreat.startDate = _orgainser.startDate;
+				panchTreat.endDate = _orgainser.endDate;
+				panchTreat.results = "Pending";
+				panchTreat.paid = _orgainser.paid;
+				panchTreat.paymentType = "Custom";
+				panchTreat.amountPaid = _orgainser.amountPaid;
+				if(!isNaN(parseFloat(bal.text))){
+					panchTreat.balance = parseFloat(bal.text);
+				}else{
+					panchTreat.balance = 0
+				}
+				
+				if(panchtreatmentColl == null){
+					panchtreatmentColl = new ArrayCollection();
+				}
+				for(var i:uint =0 ;i<panchtreatmentColl.length;i++){
+					if(PatientPanchkarma(panchtreatmentColl[i]).patientPanchId == panchTreat.patientPanchId){
+						panchtreatmentColl[i] = panchTreat;
+						break;
+					}
+				}
+				
+				if(!panchtreatmentColl.contains(panchTreat)){
+					panchtreatmentColl.addItem(panchTreat);
+				}
+				panchTreat.patient = Patient(_orgainser.patient);
+				Patient(_orgainser.patient).panchkarmaTreatment = panchtreatmentColl;
+				//patient = _orgainser.patient;
+				/* var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.ADD_PATIENT_COMMAND,Patient(_orgainser.patient));
+			 	event.dispatch(); */
+			 	markAppointmentComplete();
+			 
+			}
+			
+			private function markAppointmentComplete():void{
+				for(var j:int = 0 ;j<_orgainser.appointment.length;j++){
+		 			var appt:Appointment = _orgainser.appointment.getItemAt(j)as Appointment;
+		 				appt.apptStatus = "C";
+			 	}
+			 	_orgainser.status = "C";
+			 	createAppointment();
+			 	completeTreatment.enabled = false;
+			}
+			
+			private function calcBalance(event:Event):void{
+				if( isNaN(parseFloat(paidCurrent.text)) || parseFloat(paidCurrent.text) == 0){
+					return;
+				}
+				if(isNaN(currentAmountPaid) || !_orgainser || (event.target == amountPaid) ){
+					currentAmountPaid = parseFloat(amountPaid.text);	
+				}
+				bal.text = (currentAmountPaid -  parseFloat(paidCurrent.text)) +"";
+				
+			}
+			
+			public function setPanchCost(panchEvalCost:String):void{
+				amountPaid.text = panchEvalCost;
+			}
+			
+			private function showPanchEvaluator():void{
+				if(panchkarma.selectedItem == null){
+					Alert.show("Please select a panchkarma");
+					return;	
+				}
+				
+				var panchEvaluator:PanchCostEvaluator = new PanchCostEvaluator();
+				panchEvaluator.setCallBacFunction(setPanchCost);				
+				panchEvaluator.panchkarma = panchkarma.selectedItem as Panchkarma;
+				panchEvaluator.noOfdays = ((endDate.selectedDate.getTime() - startDate.selectedDate.getTime())/(24*60*60*1000)) +1;
+				PopUpManager.addPopUp(panchEvaluator,this);
+				PopUpManager.centerPopUp(panchEvaluator);
+			}
+		]]>
+	</mx:Script>
+	<!--mx:Label text = "{text}"/-->
+	<mx:Form>
+		<mx:FormItem label = "Patient">
+			<mx:HBox>
+				<mx:Label id= "patientName" text = "{patient.firstName + ' '+ patient.lastName}"/>
+				<mx:Button label="Select Patient" click = "selectPatient()" styleName="myButton"/>
+					
+			</mx:HBox>
+			
+		</mx:FormItem>
+		<mx:FormItem label = "Start Date">
+			<mx:DateField id= "startDate" formatString="DD/MM/YYYY"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label = "End Date">
+			<mx:DateField id= "endDate" formatString="DD/MM/YYYY"/>
+		</mx:FormItem>
+		
+		
+		<mx:FormItem label = "Start Time">
+			 <mx:HBox>
+			 	<mx:NumericStepper id="stHr" 
+	            minimum="1" maximum="12" 
+	            stepSize="1"
+	            />
+	            <mx:NumericStepper id="stMin" 
+	            minimum="0" maximum="60" 
+	            stepSize="5"
+	            />
+	            <mx:ComboBox id="stP">
+	            	<mx:dataProvider>
+	            		<mx:Array>
+	            			<mx:String>am</mx:String>
+	            			<mx:String>pm</mx:String>
+	            		</mx:Array>
+	            	</mx:dataProvider>
+	            </mx:ComboBox>	
+			 </mx:HBox>
+		</mx:FormItem>
+		<mx:FormItem label = "Type of Treatment">
+			<mx:ComboBox id = "treatmentType" >
+				<mx:dataProvider>
+					<mx:Array>
+						<mx:String>Panchkarma</mx:String>
+						<mx:String>Normal</mx:String>
+					</mx:Array>
+				</mx:dataProvider>
+			</mx:ComboBox>
+			<mx:TextInput id ="treatmentDetails" visible="{treatmentType.selectedIndex == 1}"/>
+			<mx:HBox>
+			 	<mx:ComboBox id ="panchkarma" visible="{treatmentType.selectedIndex == 0}"
+				dataProvider="{ModelLocatorImp.getInstance().panchkarmaList}" labelField="panchkarmaName" selectedIndex="-1"/>
+				<mx:Button	visible="{treatmentType.selectedIndex == 0}" click="{showPanchEvaluator()}"
+					label="Calculate"
+					/>
+			</mx:HBox>
+				
+		</mx:FormItem>
+	
+		<mx:FormItem label = "End Time">
+			<mx:HBox>
+			 	<mx:NumericStepper id="etHr" 
+	            minimum="0" maximum="12" 
+	            stepSize="1"
+	            />
+	            <mx:NumericStepper id="etMin" 
+	            minimum="0" maximum="69" 
+	            stepSize="5"
+	            />
+	            <mx:ComboBox id="etP">
+	            	<mx:dataProvider>
+	            		<mx:Array>
+	            			<mx:String>am</mx:String>
+	            			<mx:String>pm</mx:String>
+	            		</mx:Array>
+	            	</mx:dataProvider>
+	            </mx:ComboBox>	
+			 </mx:HBox>
+		</mx:FormItem>
+		<mx:FormItem label = "Status">
+			<mx:Label id = "status" text="NC"/>
+			
+		</mx:FormItem>
+		<mx:FormItem label = "Amount">
+			<mx:TextInput id = "amountPaid" change="calcBalance(event)"/>			
+		</mx:FormItem>
+		<mx:FormItem label = "Amount Paid">
+			<mx:TextInput id="paidCurrent" change="calcBalance(event)"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label = "Balance">
+			<mx:Label id="bal" text="0"/>
+		</mx:FormItem>
+		<mx:FormItem label = "Is Amount Paid">
+			<mx:ComboBox id = "amountStatus" >
+				<mx:dataProvider>
+					<mx:Array>
+						<mx:String>Y</mx:String>
+						<mx:String>N</mx:String>
+					</mx:Array>
+				</mx:dataProvider>
+			</mx:ComboBox>			
+		</mx:FormItem>
+		<mx:HBox >
+			<mx:Label text = "Clicking on the treatment will mark the treatment complete and an auto entry will be made on treatment page"/>
+			<mx:Button id = "completeTreatment" label="Complete Treatment" styleName="myButton" click = "onCompleteTreatment()"/>
+		</mx:HBox>
+		<mx:Button label="submit" click="createAppointment()" styleName="myButton"/>
+	</mx:Form>
+	
+	<mx:VBox visible="{apptDetailsColl != null}" width ="100%">
+		<mx:HBox>
+			<mx:Button label="New" click="onSaveOrEditAppointment('new')" styleName="myButton"/>
+			<mx:Button label="Edit" click="onSaveOrEditAppointment('edit')" styleName="myButton"/>
+			<mx:Button label="Delete" click="deleteAppointment()" styleName="myButton"/>
+		</mx:HBox>
+		
+		<mx:DataGrid id= "apptDtGrid" width ="100%" dataProvider="{apptDetailsColl}" 
+			doubleClick="onSaveOrEditAppointment('edit')" doubleClickEnabled="true">
+			<mx:columns>
+				<mx:DataGridColumn dataField="apptTime" headerText="Appointment Time" labelFunction="apptDetailsLableFunc"/>
+				<mx:DataGridColumn headerText="Status" dataField="apptStatus"/>
+			</mx:columns>
+		</mx:DataGrid>
+		
+	</mx:VBox>
+	
+</mx:VBox>

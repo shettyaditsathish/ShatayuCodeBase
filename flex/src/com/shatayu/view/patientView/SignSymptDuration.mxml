@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+	<mx:Script>
+        <![CDATA[
+        	public var 
+			override public function set data(value:Object):void{
+				
+			}
+        	
+        ]]>
+    </mx:Script>
+    <mx:Repeater>
+    	<mx:HBox>
+    		<mx:VBox>
+    			<mx:Label />
+    			<mx:Label />
+	    	</mx:VBox>
+	    	<mx:Label />
+    	</mx:HBox>
+    	
+    </mx:Repeater>
+    <mx:Lable
+    </mx:HBox>

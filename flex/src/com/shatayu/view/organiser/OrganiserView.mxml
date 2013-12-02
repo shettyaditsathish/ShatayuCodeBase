@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="OnCreationComplete()"
+	show= "displayData()" implements="com.shatayu.view.IChildView">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.containers.HBox;
+			import mx.core.ScrollPolicy;
+			import com.shatayu.model.Panchkarma;
+			import com.shatayu.model.ModelLocatorImp;
+			import com.shatayu.model.Organiser;
+			import mx.controls.TextArea;
+			import com.shatayu.event.ShatayuEvent;
+			import mx.managers.PopUpManager;
+			import mx.core.IFlexDisplayObject;
+			import mx.controls.TextInput;
+			import com.shatayu.model.Appointment;
+			import mx.collections.ArrayCollection;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import mx.states.SetStyle;
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
+			import mx.controls.Label;
+			import mx.containers.VBox;
+			
+			private static var dayArray:Array = new Array("Sun","Mon","Tue","Wed","Thu","Fri", "Sat");
+			private static var HEADER_WIDTH:int = 133;
+			private static var HEADER_HEIGHT:int = 50;
+			
+			private static var TIME_COLUMN_WIDTH:int = 133;
+			
+			
+			private static var TIME_ENTRY_COLUMN_WIDTH:int = 133;
+			private static var TIME_ENTRY_COLUMN_HEIGHT:int = 60;
+			
+			
+			
+			
+			private var definedStartDate:Date = new Date();
+			private var isCreationCompletFired:Boolean = false;
+			
+			public function onViewDisplay():void{
+				
+			}
+			
+			private function OnCreationComplete():void{
+				setDefinedDefaultStartDate()
+				render();
+				getAndRenderData();
+				isCreationCompletFired = true;
+				
+			}	
+			
+			private function getAndRenderData():void{
+				var arr:Array = calculateDatesForWeeks();
+				getAppointmentDetailsForDates(arr[0] as Date,arr[arr.length -1] as Date);	
+			}
+			
+			private function getAppointmentDetailsForDates(startDate:Date,endDate:Date):void{
+				var mp:Object = new Object();
+				var endDateFinal:Date =  new Date();
+				endDateFinal.month = endDate.month
+				endDateFinal.fullYear = endDate.fullYear;
+				endDateFinal.hours = 1;
+				endDateFinal.minutes = 1;
+				endDateFinal.seconds = 1;
+				endDateFinal.date = endDate.date+1;
+				mp["startDate"] = startDate;
+				mp["endDate"] = endDateFinal;
+				trace("=======getAppointmentDetailsForDates======="+startDate.time);
+				trace("=======startDate======= "+startDate);
+				trace("=======endDate======= "+endDateFinal);
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.GET_APPOINTMENT_DETAILS_BY_DATE_COMMAND,mp,onAppointDetailsList);
+        		event.dispatch();
+			}
+			
+			private function onAppointDetailsList(obj:Object):void{
+				var arr:ArrayCollection = obj as ArrayCollection;
+				trace("=======result=======  "+ arr.length);
+				for(var i:int =0 ;i< arr.length;i++){
+					var apptDetail:Appointment = arr[i] as Appointment;
+					generateAppoointments(apptDetail);
+				}
+				
+				placeCoinciding();
+			}
+			
+			private function render():void{
+				var headerHBox:HBox = new HBox();
+				var timeEntryHBox:HBox = new HBox();
+				var timeBox:VBox = new VBox();
+				var timeHeader:UIComponent = createHeader("Time");
+				headerHBox.addChild(timeHeader);
+				timeBox.setStyle("verticalGap",0);
+				
+				headerHBox.setStyle("horizontalGap",0);
+				timeEntryHBox.setStyle("horizontalGap",0);
+				
+				for(var i:int =0 ;i< 12;i++){
+					var lbl:String = (8+i)+" am";
+					if(parseInt((8+i)+"") == 12){
+						lbl = (parseInt((8+i)+""))+" pm";
+					}else if(parseInt((8+i)+"") > 12){
+						lbl = (parseInt((8+i)+"") - 12)+" pm";
+					}
+					timeBox.addChild(createBlocksWithLabels(lbl,true));
+				} 
+				
+				timeEntryHBox.addChild(timeBox);
+				
+				headerHBoxCont.addChild(headerHBox);
+				hBox.addChild(timeEntryHBox);
+				
+				var arr:Array = calculateDatesForWeeks();
+				
+				for(var j:int = 0;j< arr.length;j++){
+					var weekCol:VBox = new VBox();
+					var dt:Date = arr[j] as Date;
+					headerHBox.addChild(createHeader(dayArray[j]+" "+ dt.getDate() +"/"+(dt.getMonth()+1)));
+					for(var k:int =0 ;k< 12;k++){
+						weekCol.addChild(createBlocksWithLabels());
+					}
+					weekCol.setStyle("verticalGap",0);
+					timeEntryHBox.addChild(weekCol);
+				}  
+			}
+			
+			private function createBlocksWithLabels(str:String = "",isFirstColumn:Boolean=false):UIComponent{
+				var vbB:VBox = new VBox();
+				var lbl:Label = new Label();
+				lbl.text = str;
+				lbl.percentWidth = 100;
+				
+				if(str.length > 0){
+					vbB.addChild(lbl);
+					lbl.setStyle("textAlign","center");
+					lbl.setStyle("fontWeight","bold");
+					lbl.setStyle("fontSize","11");
+				}
+					
+				vbB.height = TIME_ENTRY_COLUMN_HEIGHT
+				vbB.width = TIME_ENTRY_COLUMN_WIDTH;
+				if(isFirstColumn)
+					vbB.width = TIME_COLUMN_WIDTH;
+				vbB.setStyle("borderStyle","solid");	
+				vbB.setStyle("verticalAlign","middle");	
+				return vbB;
+			}
+			
+			
+			private function calculateDatesForWeeks():Array{
+				var arr:Array = new Array();
+				var dt:Date = initialDate;
+				var currentDay:Number = dt.getDay()
+				arr.push(initialDate);
+				while(currentDay < 6 ){
+					dt.date = dt.date + 1;
+					var newDate:Date = new Date();
+					newDate.date = dt.date;
+					newDate.month = dt.month
+					newDate.fullYear = dt.fullYear;
+					newDate.hours = 1;
+					newDate.minutes = 1;
+					newDate.seconds = 1;
+					currentDay++;
+					arr.push(newDate);
+					//date = newDate;
+				}
+				
+				return arr;
+			}
+			
+			private function createHeader(lbl:String):UIComponent{
+				var lblComp:Label = new Label();
+				lblComp.text = lbl;
+				lblComp.percentWidth = 100;
+				
+				lblComp.setStyle("textAlign","center");
+				lblComp.setStyle("fontSize","14");
+				lblComp.setStyle("fontWeight","bold");
+				lblComp.setStyle("color",0xFFFFFF);
+				
+				var vbox:VBox = new VBox();
+				vbox.addChild(lblComp);
+				vbox.setStyle("backgroundColor",0x666666);
+				vbox.setStyle("borderStyle","solid")	
+				vbox.setStyle("borderColor","black")	
+				vbox.setStyle("verticalAlign","middle")	
+				vbox.height  = HEADER_HEIGHT;
+				vbox.width   = HEADER_WIDTH;
+				return vbox;
+				
+			}
+			
+			private function setDefinedDefaultStartDate():void{
+				var currentDay:Number = definedStartDate.getDay();
+				
+				if(currentDay != 0 ){
+					definedStartDate.date = definedStartDate.date - (currentDay);
+				}
+			}
+			
+			private function get initialDate():Date{
+				var newDate:Date = new Date();
+				newDate.date = definedStartDate.date;
+				newDate.month = definedStartDate.month
+				newDate.fullYear = definedStartDate.fullYear;
+				newDate.hours = 1;
+				newDate.minutes = 1;
+				newDate.seconds = 1;
+				return newDate;
+			}
+			
+			private function onNext():void{
+				destroy();
+				definedStartDate.date = definedStartDate.date +7;
+				render();
+				getAndRenderData();
+			}
+			
+			private function onPrev():void{
+				destroy();
+				definedStartDate.date = definedStartDate.date - 7;
+				render();
+				getAndRenderData();
+			}
+			
+			private function destroy():void{
+				deleteChildren(drawingLayer);
+				deleteChildren(hBox);
+				deleteChildren(headerHBoxCont);
+			}
+			
+			private function deleteChildren(child:Object):void{
+				if(!(child is UIComponent))return;
+				
+				for(var i:int = 0;i<UIComponent(child).numChildren;i++){
+					
+					deleteChildren(UIComponent(child).getChildAt(i));
+					UIComponent(child).removeChildAt(i);
+					i--;
+					
+				}
+			}
+			
+			private function generateAppoointments(apptDetail:Appointment):void{
+				
+				var startDate:Date = apptDetail.apptStartDate;
+				var endDate:Date = apptDetail.apptEndDate;
+				var starthr:int = startDate.getHours();
+				var endhr:int = endDate.getHours();
+				var startMin:int = startDate.getMinutes();
+				var endMin:int = endDate.getMinutes();
+				var y1Axis:int = ((starthr - 8)* TIME_ENTRY_COLUMN_HEIGHT) + ((startMin/60)*TIME_ENTRY_COLUMN_HEIGHT);
+				var y2Axis:int = ((endhr - 8)* TIME_ENTRY_COLUMN_HEIGHT) + ((endMin/60)*TIME_ENTRY_COLUMN_HEIGHT);
+				
+				var xAxis:int = HEADER_WIDTH +  (startDate.getDay() * TIME_ENTRY_COLUMN_WIDTH);
+				var vBox:VBox = new VBox();
+				vBox.height = y2Axis - y1Axis;
+				vBox.width = TIME_ENTRY_COLUMN_WIDTH;
+				vBox.setStyle("backgroundColor","white");
+				var textInt:TextArea = new TextArea();
+				textInt.editable = false;
+				textInt.wordWrap = true;
+				textInt.percentHeight = 100;
+				textInt.percentWidth = 100;
+				
+				textInt.text = apptDetail.organiser.patient.firstName + " " +apptDetail.organiser.patient.lastName + " " +getPanchkarmaorTreatmentName(apptDetail);
+				vBox.toolTip = apptDetail.organiser.patient.firstName + " " +apptDetail.organiser.patient.lastName + "  "+ getPanchkarmaorTreatmentName(apptDetail)+ " "+
+								((starthr >12) ? starthr - 12: starthr +":"+startMin) + ((starthr >12) ? "pm": "am") + " - "+
+								((endhr >12) ? endhr - 12: endhr +":"+endMin) + ((endhr >12) ? "pm": "am");
+				vBox.addChild(textInt);				 
+								
+				if(apptDetail.apptStatus == "C"){
+					vBox.setStyle("borderStyle","solid");
+					vBox.setStyle("borderThickness","3");
+					vBox.setStyle("borderColor","green");
+				}else{
+					vBox.setStyle("borderStyle","solid");
+					vBox.setStyle("borderThickness","3");
+					vBox.setStyle("borderColor","red");
+				}
+				vBox.setStyle("backgroundColor",0x003300);
+				textInt.setStyle("fontWeight","bold");
+				textInt.setStyle("color","white");
+				textInt.setStyle("backgroundColor",0x003300);
+				vBox.horizontalScrollPolicy = ScrollPolicy.OFF;
+				vBox.verticalScrollPolicy = ScrollPolicy.OFF;
+				textInt.verticalScrollPolicy  = ScrollPolicy.OFF;
+				textInt.verticalScrollPolicy = ScrollPolicy.OFF;
+				textInt.addEventListener(MouseEvent.CLICK,function(e:Event):void
+					{
+						onAppointmentClicked(apptDetail);
+					}
+					);
+				drawingLayer.addChild(vBox);
+				//Alert.show("Child added ");
+				vBox.x= xAxis;
+				vBox.y= y1Axis;
+			}
+			
+			private function placeCoinciding():void{
+				var mapper:Object = determineConiciding();
+				for each(var arr:Array in mapper){
+					if(arr.length == 1 )
+						continue;
+					
+					var len:int = arr.length;
+					var objWidth:Number = TIME_ENTRY_COLUMN_WIDTH/len;
+					var i:int = 0;
+					for each(var uicomp:UIComponent in arr){
+						uicomp.width = objWidth;
+						uicomp.x = uicomp.x + (objWidth * i);
+						i++;
+					}
+				}
+			}
+			
+			private function determineConiciding():Object{
+				var mapper:Object = new Object();
+				for(var i:int =0;i<drawingLayer.numChildren;i++){
+					var child:VBox = drawingLayer.getChildAt(i) as VBox;
+					if(mapper[ getIdForChild(child) ] == null){
+						var arr:Array = new Array();
+						arr.push(child);
+						mapper[ getIdForChild(child) ] = arr;
+						continue;
+					}
+					
+					(mapper[ getIdForChild(child) ] as Array).push(child);
+				}
+				
+				return mapper;
+			}
+			
+			private function getIdForChild(child:UIComponent):String{
+				return child.x+"x"+child.y+"y";
+			}
+			
+			private function getPanchkarmaorTreatmentName(appt:Appointment):String{
+				if(appt.organiser.panchkarmaId == -1 ||appt.organiser.panchkarmaId == 0){
+					return "Treatment:"+appt.organiser.treatmentDetails	
+				}
+				
+				var panchkarmaList:ArrayCollection =  ModelLocatorImp.getInstance().panchkarmaList;
+	        	for(var i:int =0;i<panchkarmaList.length;i++){
+	        		if(Panchkarma(panchkarmaList.getItemAt(i)).panchkarmaId == appt.organiser.panchkarmaId){
+	        			return "Panchkarma:"+Panchkarma(panchkarmaList.getItemAt(i)).panchkarmaName;
+	        		}
+	        	}
+	        	return "";
+			}
+			
+			public function onCreateOrEdit(obj:Object):void{
+				displayData();
+			}
+			
+			private function displayData():void{
+				trace(" isCreated  "+isCreationCompletFired);
+			 	if(isCreationCompletFired){
+			 		isCreationCompletFired = false;
+			 		return;
+			 	}
+			 	try{
+					destroy();
+					render();
+					getAndRenderData();
+				}catch(e:Error){
+					
+				} 
+			}
+			
+			private function onAppointmentClicked(apptDetail:Appointment):void{
+				mainHolder.setFocus();
+				var popup:IFlexDisplayObject = PopUpManager.createPopUp(this,AppointmentDetailsForm);
+	        	AppointmentDetailsForm(popup).parentObj = this;
+	        	AppointmentDetailsForm(popup).appointment = apptDetail.organiser;
+	        	AppointmentDetailsForm(popup).appointmentDetail = apptDetail;
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:VBox width="100%" height ="100%" verticalGap="0" horizontalGap="0" horizontalAlign="left" paddingLeft="10">
+		<mx:HBox  id = "headerHBoxCont"  horizontalGap="0" />
+		<mx:Canvas id = "mainHolder"  height ="100%"  
+			horizontalScrollPolicy="off" >
+			<mx:VBox id = "hBox" width = "100%" backgroundColor="#CAE092" horizontalGap="0" verticalGap="0">
+					
+					
+			</mx:VBox>	
+			<mx:UIComponent id= "drawingLayer"/>
+		</mx:Canvas>
+		
+		
+	</mx:VBox>
+	
+	<mx:HBox height="7%" width = "100%" horizontalAlign="right" paddingRight="10">
+			<mx:Button label = "Previous" click = "onPrev()" styleName="myButton"/>
+			<mx:Button label = "Next" click = "onNext()" styleName="myButton"/>
+		</mx:HBox>
+</mx:VBox>

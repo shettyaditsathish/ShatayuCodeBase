@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="100%" height="100%" creationComplete="onCreate()">
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.event.ShatayuEvent;
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			private var chartData:ArrayCollection;
+			
+			private var monthCollection:Array = ["Jan","Feb","Mar","Apr","May","Jun", "Jul","Aug", "Sep","Oct","Nov","Dec"];
+			
+			private function onCreate():void{
+				startDateCombo.dataProvider = new ArrayCollection(monthCollection);
+				endDateCombo.dataProvider = new ArrayCollection(monthCollection);
+				var yrArr:Array = new Array();
+				
+				for(var i:int = 2005 ;i<2030;i++){
+					yrArr.push(i);
+				}
+				startYearCombo.dataProvider = new ArrayCollection(yrArr);
+				startYearCombo.selectedItem = (new Date()).getFullYear();
+				endYearCombo.dataProvider = new ArrayCollection(yrArr);
+				endYearCombo.selectedItem = (new Date()).getFullYear();
+			}
+			
+			private function displayChart():void{
+				var startDate:Date = new Date();
+				trace("Check selected Index "+startDateCombo.selectedIndex);
+				startDate.date = 1;
+				startDate.month = (startDateCombo.selectedIndex) as Number;
+				startDate.hours = 0;
+				startDate.minutes = 0;
+				startDate.seconds = 0; 
+				
+				trace("startDate.month "+startDate.month);
+				startDate.fullYear = (startYearCombo.selectedItem as Number);
+				
+				var endDate:Date = new Date();
+				endDate.date =1;
+				endDate.month = (endDateCombo.selectedIndex)  as Number;
+				endDate.fullYear = (endYearCombo.selectedItem as Number);
+				endDate.hours = 0;
+				endDate.minutes = 0;
+				endDate.seconds = 0;
+				var mp:Object =  {"startDate":startDate,"endDate":endDate};
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.TREATMENT_MONTHS_CHART_COMMAND,mp,onChartData);
+        		event.dispatch();
+			}
+			
+			public function onChartData(obj:Object):void{
+				chartData =  obj as ArrayCollection;
+				trace("Chart Length  "+chartData.length);
+			}
+		]]>
+	</mx:Script>
+	
+		<mx:HBox>
+			<mx:Label text="Select Start Month"/>
+			<mx:ComboBox id = "startDateCombo" />
+			<mx:Spacer width = "20"/>
+			<mx:Label text="Select Year"/>
+			<mx:ComboBox id = "startYearCombo" />
+		</mx:HBox>
+	
+	
+		<mx:HBox>
+			<mx:Label text="Select End Month"/>
+			<mx:ComboBox id = "endDateCombo" />
+			<mx:Spacer width = "20"/>
+			<mx:Label text="Select Year"/>
+			<mx:ComboBox id = "endYearCombo" />
+		</mx:HBox>
+		<mx:HBox>
+			<mx:RadioButtonGroup id = "rdGroup"/>
+			<mx:RadioButton label = "Column Chart" click="{chartView.selectedIndex =0}" group="{rdGroup}" selected="true"/>
+			<mx:RadioButton label = "Line Chart" click="{chartView.selectedIndex =1}" group="{rdGroup}"/>
+			<mx:RadioButton label = "Pie Chart" click="{chartView.selectedIndex =2}" group="{rdGroup}"/>
+		</mx:HBox>
+		
+		
+		<mx:Button label="Display Chart" click="displayChart()"/>
+		<mx:ViewStack id = "chartView" width ="100%" height="100%">
+			<mx:VBox width ="100%" height="100%" verticalGap="0" horizontalGap="0">
+				<mx:ColumnChart id = "colChart" showDataTips="true" dataProvider="{chartData}" width="100%" height="100%">
+					<mx:horizontalAxis>
+						<mx:CategoryAxis categoryField="month" dataProvider="{chartData}"/>
+					</mx:horizontalAxis>
+					<mx:series>
+						<mx:ColumnSeries yField="treatments" dataProvider="{chartData}"
+							displayName="Treatments" >
+							<mx:fill>
+			                    <mx:SolidColor 
+			                        color="0xAA0000" 
+			                        alpha=".3"
+			                    />
+			                </mx:fill>
+
+						</mx:ColumnSeries>
+						<mx:ColumnSeries yField="panchkarmas" dataProvider="{chartData}"
+							displayName="Panchkarmas" >
+							<mx:fill>
+			                    <mx:SolidColor 
+			                        color="0xAABB00" 
+			                        alpha=".3"
+			                    />
+			                </mx:fill>
+						</mx:ColumnSeries>
+					</mx:series>
+					
+					
+				</mx:ColumnChart>
+				<mx:Legend dataProvider="{colChart}"/>
+
+			</mx:VBox>
+			<mx:VBox width ="100%" height="100%" verticalGap="0" horizontalGap="0">
+				<mx:LineChart id = "lineCh" showDataTips="true" dataProvider="{chartData}" width="100%" height="100%">
+					<mx:horizontalAxis>
+						<mx:CategoryAxis categoryField="month" 
+							dataProvider="{chartData}"/>
+					</mx:horizontalAxis>
+					<mx:series>
+						<mx:LineSeries yField="treatments" 
+							dataProvider="{chartData}" displayName="Treatments">
+							
+						</mx:LineSeries>
+						<mx:LineSeries yField="panchkarmas" dataProvider="{chartData}"
+							displayName="Panchkarmas">
+							
+						</mx:LineSeries>
+					</mx:series>
+					
+					
+				</mx:LineChart>
+				<mx:Legend dataProvider="{lineCh}"/>
+			</mx:VBox>
+			
+			<mx:HBox width ="100%" height="100%" verticalGap="0" horizontalGap="0">
+				<mx:VBox width ="100%" height="100%" verticalGap="0" horizontalGap="0">
+					<mx:Label text=" Treatment Stats " fontWeight="bold" fontSize="12"/>
+					<mx:PieChart id = "pieCh" showDataTips="true" 
+						dataProvider="{chartData}" 
+						width="100%" height="100%" >
+						
+						<mx:series>
+							<mx:PieSeries nameField="month" field="treatments"
+								displayName="month">
+								
+							</mx:PieSeries>
+						</mx:series>
+						
+						
+					</mx:PieChart>
+					
+				</mx:VBox>
+				<mx:VBox width ="100%" height="100%" verticalGap="0" horizontalGap="0">
+					<mx:Label text=" Panchkarma Stats " fontWeight="bold" fontSize="12"/>
+					<mx:PieChart id = "pieChPAnch" showDataTips="true"
+						dataProvider="{chartData}" width="100%" height="100%">
+						
+						<mx:series>
+							<mx:PieSeries nameField="month" field="panchkarmas"
+								displayName="month">
+								
+							</mx:PieSeries>
+						</mx:series>
+						
+						
+					</mx:PieChart>
+				</mx:VBox>
+				<mx:Legend dataProvider="{pieCh}"/>
+			</mx:HBox>
+			
+		</mx:ViewStack>
+		
+		
+</mx:Panel>

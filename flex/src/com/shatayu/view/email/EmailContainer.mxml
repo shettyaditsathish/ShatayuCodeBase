@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+		 width="100%" height="100%">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.TextInput;
+			import mx.controls.Alert;
+			import mx.controls.HTML;
+			import com.shatayu.model.Mail;
+			import mx.collections.ArrayCollection;
+			import mx.containers.TitleWindow;
+			import mx.controls.DateField;
+			import mx.core.UIComponent;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			public var selectedMail:Mail;
+			
+			public var emailProvider:String;
+			
+			[Bindable]
+			public var emailDataProvider:ArrayCollection;
+			
+			private function oDateLabel(item:Object,column:DataGridColumn):String{
+				var dt:Date = Mail(item).recievedDate as Date;
+				return appendZeroIfSingleDigit(dt.getDate()) + "/" + appendZeroIfSingleDigit((dt.getMonth() +1)) + "/" + dt.getFullYear() + " "+appendZeroIfSingleDigit(dt.getHours()) + ":" + appendZeroIfSingleDigit(dt.getMinutes());
+			}
+			
+			private function oSubjectLabel(item:Object,column:DataGridColumn):String{
+				
+				return Mail(item).subject
+			}
+			
+			private function oFromLabel(item:Object,column:DataGridColumn):String{
+				
+				return Mail(item).fromAddress
+			}
+			
+			private function oSerialLabel(item:Object,column:DataGridColumn):String{
+				
+				return (emailDataProvider.getItemIndex(Mail(item)) +1)+"";
+			}
+						
+			private function onDoubleClick():void{
+				
+				var titleWindow:TitleWindow = new TitleWindow();
+				titleWindow.width = 600;
+				titleWindow.height = 600;
+				titleWindow.showCloseButton = true;
+				titleWindow.addEventListener(CloseEvent.CLOSE,onClose);
+				//IMplementation pending
+				/* var htmlText:HTML = new HTML();
+				htmlText.percentWidth = 100;
+				htmlText.percentHeight = 100;
+				htmlText.htmlText = (dg.selectedItem as Mail).mailContent;
+				titleWindow.addChild(htmlText); */
+				 var htmlText:TextInput = new TextInput();
+				htmlText.percentWidth = 100;
+				htmlText.percentHeight = 100;
+				htmlText.text = (dg.selectedItem as Mail).mailContent;
+				titleWindow.addChild(htmlText);
+				PopUpManager.addPopUp(titleWindow,this);
+				PopUpManager.centerPopUp(titleWindow);
+			}
+			
+			private function onClose(ev:Event):void{
+				PopUpManager.removePopUp(ev.currentTarget as TitleWindow);
+			}
+			
+			private function appendZeroIfSingleDigit(digit:Number):String{
+				return ((digit+"").length == 1)?"0"+digit:digit+"";
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:DataGrid id = "dg" variableRowHeight="true" width ="100%" height="100%" 
+				 dataProvider="{emailDataProvider}"
+				 doubleClickEnabled="true" doubleClick="onDoubleClick()" 
+				 change = "{selectedMail = dg.selectedItem as Mail}">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Sr.no" width = "38" labelFunction="oSerialLabel"/>
+			<mx:DataGridColumn headerText="From" labelFunction="oFromLabel" width = "95" wordWrap="true"/>
+			<mx:DataGridColumn headerText="Recieved Date" labelFunction="oDateLabel" width = "95"/>
+			<mx:DataGridColumn headerText="Mail Subject" wordWrap="true" labelFunction="oSubjectLabel" />
+		</mx:columns>
+	</mx:DataGrid>
+	
+</mx:VBox>

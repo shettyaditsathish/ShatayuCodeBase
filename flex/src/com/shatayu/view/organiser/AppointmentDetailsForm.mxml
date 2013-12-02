@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+	 width="100%" height="100%" title="New Appointment Detail" showCloseButton="true" 
+	 close="PopUpManager.removePopUp(this)" creationComplete="onCreationComplete()">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.collections.ArrayCollection;
+			import mx.managers.PopUpManager;
+			import com.shatayu.event.ShatayuEvent;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.model.Organiser;
+			import mx.binding.utils.BindingUtils;
+			import com.shatayu.model.Appointment;
+			
+			[Bindable]
+			public var appointment:Organiser;
+			
+			[Bindable]
+			private var _apptDetail:Appointment;
+			
+			public var parentObj:Object;
+		
+			public function set appointmentDetail(value:Appointment):void{
+				_apptDetail = value;
+				
+			}
+			
+			private function onCreationComplete():void{
+				PopUpManager.centerPopUp(this);
+				if(!_apptDetail)return;
+				appointment = _apptDetail.organiser;
+				
+				var apptDetail:Appointment = _apptDetail as Appointment;
+	        	stHr.value = (apptDetail.apptStartDate.hours >12)?(apptDetail.apptStartDate.hours -12 ):apptDetail.apptStartDate.hours; 
+	        	stMin.value = apptDetail.apptStartDate.minutes;
+	        	stP.selectedIndex = (apptDetail.apptStartDate.hours >=12)?1:0;
+	        	
+	        	etHr.value = (apptDetail.apptEndDate.hours >12)?(apptDetail.apptEndDate.hours -12 ):apptDetail.apptEndDate.hours; 
+	        	etMin.value = apptDetail.apptEndDate.minutes;
+	        	etP.selectedIndex = (apptDetail.apptEndDate.hours >=12)?1:0;
+	        	statuslb.text = apptDetail.apptStatus;
+			}
+			
+			private function onSubmit(status:String = null):void{
+				if(!validate())return;
+				var startDate:Date = new Date();
+				startDate.date = apptDate.selectedDate.date;
+				startDate.month = apptDate.selectedDate.month
+				startDate.fullYear = apptDate.selectedDate.fullYear;
+        		var apptDetailStartHr:Number =  Number(stHr.value);
+        		if(apptDetailStartHr == 12)
+	        				apptDetailStartHr = 0;
+        		if(stP.selectedItem+"" == "pm")
+        			apptDetailStartHr = apptDetailStartHr + 12;
+        		startDate.hours = apptDetailStartHr;
+        		startDate.minutes = Number(stMin.value);
+        		
+        		var endDate:Date = new Date();
+				endDate.date = apptDate.selectedDate.date;
+				endDate.month = apptDate.selectedDate.month
+				endDate.fullYear = apptDate.selectedDate.fullYear;
+        		var apptDetailEndHr:Number =  Number(etHr.value);
+        		if(apptDetailEndHr == 12)
+	        				apptDetailEndHr = 0;
+        		if(etP.selectedItem+"" == "pm")
+        			apptDetailEndHr = apptDetailEndHr + 12;
+        		endDate.hours = apptDetailEndHr;
+        		endDate.minutes = Number(etMin.value);
+        		
+        		var appt:Appointment = new Appointment();
+        		if(_apptDetail != null)
+        			appt = _apptDetail;
+        		appt.apptStartDate = startDate;
+        		appt.apptEndDate = endDate ;
+        		
+        		appt.apptStatus = (statuslb.text != null && statuslb.text != "")?statuslb.text:"NC";
+        		
+        		if(status != null)
+        			appt.apptStatus = status;
+        		
+        		appt.organiser = appointment;
+        		
+        		var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.SAVE_APPOINTMENT_DETAILS_COMMAND,appt,onAddAppointmentDt);
+        		event.dispatch();
+			}
+			
+			private function validate():Boolean{
+				/* if(apptDate.selectedDate ==null){
+					Alert.show("Please enter date");
+					return false;
+				}
+				
+				if(isNaN(stHr.value) || isNaN(stMin.value)|| isNaN(etHr.value)|| isNaN(etMin.value)){
+	        		Alert.show("Please enter proper timing details some of the timing details are missing");
+	        		return false;
+	        	}else{
+	        		if(((Number(etHr.value) < Number(stHr.value)) && (etP.selectedIndex == stP.selectedIndex)) || etP.selectedIndex < stP.selectedIndex ){
+	        			Alert.show("End time should be greater than start time");
+	        			return false;
+	        		}
+	        		
+	        		if(((Number(etHr.value) == Number(stHr.value)) && (etP.selectedIndex == stP.selectedIndex)) ){
+	        			Alert.show("End time should be greater than start time");
+	        			return false;
+	        		}
+	        	} */
+	        	
+	        	 if((stHr.value > 11 && stP.selectedIndex == 0) || (etHr.value > 11 && etP.selectedIndex == 0)){
+	        	 	Alert.show("Please verify you date");
+	        	 	return false;
+	        	 }
+	        	 
+	           	 if((stHr.value > 11 && stP.selectedIndex == 0) || (etHr.value > 11 && etP.selectedIndex == 0)){
+	        	 	Alert.show("Please verify you date");
+	        	 	return false;
+	        	 }
+	        	
+	        	if(isNaN(stHr.value) || isNaN(stMin.value)|| isNaN(etHr.value)|| isNaN(etMin.value)){
+	        		Alert.show("Please enter proper timing details some of the timing details are missing");
+	        		return false;
+	        	}else{
+	        		
+	        		if(etP.selectedIndex < stP.selectedIndex ){
+	        			Alert.show("End time should be greater than start time");
+	        			return false;
+	        		}
+	        		if(etP.selectedIndex == stP.selectedIndex){
+	        			var strNum:Number = Number(stHr.value);
+	        			var etrNum:Number = Number(etHr.value);
+	        			if((etP.selectedIndex == 1)){
+	        				if(strNum == 12)
+	        					strNum = 0;
+	        				if(etrNum == 12)
+	        					etrNum = 0;
+	        				
+	        			}
+	        			if(etrNum == strNum){
+	        				if(Number(etMin.value) > Number(stMin.value))
+	        				return true;
+	        			}
+	        			
+	        			if(etrNum > strNum)
+	        				return true;
+	        				
+        				Alert.show("End time should be greater than start time");
+        				return false;
+	        		}
+	        		
+	        		if(((Number(etHr.value) == Number(stHr.value)) && (etP.selectedIndex == stP.selectedIndex)) ){
+	        			Alert.show("End time should be greater than start time");
+	        			return false;
+	        		} 
+	        	}
+				return true;
+			}
+			
+			public function onAddAppointmentDt(obj:Object):void{
+				var objReq:Appointment = (obj as ArrayCollection).getItemAt(0) as Appointment;
+				parentObj.onCreateOrEdit(objReq);
+				PopUpManager.removePopUp(this);
+			}
+			
+			private function onMarkComplete():void{
+				onSubmit("C");
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Label text = "New Appointment Detail"/>
+	<mx:Form>
+		
+		<mx:FormItem label = "Date">
+			<mx:DateField id= "apptDate" selectedDate="{_apptDetail.apptStartDate}" formatString="DD/MM/YYYY"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label = "Start Time">
+			 <mx:HBox>
+			 	<mx:NumericStepper id="stHr" 
+	            minimum="1" maximum="12" 
+	            stepSize="1"
+	            />
+	            <mx:NumericStepper id="stMin" 
+	            minimum="0" maximum="60" 
+	            stepSize="5"
+	            />
+	            <mx:ComboBox id="stP">
+	            	<mx:dataProvider>
+	            		<mx:Array>
+	            			<mx:String>am</mx:String>
+	            			<mx:String>pm</mx:String>
+	            		</mx:Array>
+	            	</mx:dataProvider>
+	            </mx:ComboBox>	
+			 </mx:HBox>
+		</mx:FormItem>
+		
+		<mx:FormItem label = "End Time">
+			<mx:HBox>
+			 	<mx:NumericStepper id="etHr" 
+	            minimum="0" maximum="12" 
+	            stepSize="1"
+	            />
+	            <mx:NumericStepper id="etMin" 
+	            minimum="0" maximum="69" 
+	            stepSize="5"
+	            />
+	            <mx:ComboBox id="etP">
+	            	<mx:dataProvider>
+	            		<mx:Array>
+	            			<mx:String>am</mx:String>
+	            			<mx:String>pm</mx:String>
+	            		</mx:Array>
+	            	</mx:dataProvider>
+	            </mx:ComboBox>	
+			 </mx:HBox>
+		</mx:FormItem>
+		
+	</mx:Form>
+	
+	<mx:FormItem label = "Status">
+		<mx:Label id="statuslb" />
+	</mx:FormItem>
+	
+	<mx:FormItem label = "Mark as Complete">
+		<mx:Button label="Click to mark appointment Complete" click="onMarkComplete()" styleName="myButton"/>
+	</mx:FormItem>
+	
+	<mx:Button label="Submit" click="onSubmit()" styleName="myButton"/>
+</mx:TitleWindow>

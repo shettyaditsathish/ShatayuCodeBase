@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width = "100%" height  = "100%"
+	xmlns:mv = "com.shatayu.view.email.*" implements="com.shatayu.view.interfaces.IView"			
+	>
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.view.organiser.ComposeWindow;
+			import mx.core.Application;
+			import mx.collections.ArrayCollection;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.event.ShatayuEvent;
+			import mx.controls.Alert;
+			import mx.controls.DateField;
+			import mx.managers.PopUpManager;
+			
+			protected var composeBox:ComposeWindow = new ComposeWindow();
+			
+			public function set viewData(obj:Object):void{
+				
+			}
+			
+			public function get viewData():Object{
+				return null;
+			}
+			
+			private function onNewMail():void{
+				composeBox.mail = null;
+				composeBox.emailProvider = EmailContainer(acc.selectedChild).emailProvider;
+				PopUpManager.addPopUp(composeBox,Application.application as DisplayObject);
+				PopUpManager.centerPopUp(composeBox);
+			}
+			
+			private function onReplyMail():void{
+				composeBox.mail = EmailContainer(acc.selectedChild).selectedMail;
+				composeBox.emailProvider = EmailContainer(acc.selectedChild).emailProvider;
+				if(!composeBox.mail){
+					Alert.show("Please select a mail to reply");
+					return;
+				}
+				PopUpManager.addPopUp(composeBox,Application.application as DisplayObject);
+				PopUpManager.centerPopUp(composeBox);
+			}
+			
+			private function recieveMail():void{
+				// recieve mail
+				var mp:Object = {"emailProvider":EmailContainer(acc.selectedChild).emailProvider};
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.EMAIL_RECIEVE_COMMAND,mp,onRecieveMail);
+        		event.dispatch();
+			}
+			
+			public function onRecieveMail(obj:Object):void{
+				 EmailContainer(acc.selectedChild).emailDataProvider =  obj as ArrayCollection;
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:HBox>
+		<mx:Button label="Compose" click="onNewMail()"/>
+		<mx:Button label="Reply" click="onReplyMail()"/>
+		<mx:Button label="Recieve" click="recieveMail()"/>
+	</mx:HBox>
+	<mx:Accordion width = "100%" height = "100%" id = "acc">
+		<mv:EmailContainer id= "gmailBox" width = "100%" height = "100%" label ="GMAIL" emailProvider="gmail"/>
+		<mv:EmailContainer id= "shatyuMailBox" width = "100%" height = "100%" label ="SHATAYU" emailProvider="shatayu"/>
+	</mx:Accordion>
+</mx:VBox>

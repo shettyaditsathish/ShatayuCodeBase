@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"  
+	xmlns:service1="com.shatayu.service.*" 
+	xmlns:controller="com.shatayu.controller.*"
+	xmlns:comp="com.shatayu.view.*"
+	xmlns:compdrug="com.shatayu.view.drug.*"
+	xmlns:comppattient="com.shatayu.view.patientView.*"
+	xmlns:misc="com.shatayu.view.misc.*"
+	creationComplete="onCreationComplete()"
+	backgroundColor="#CAE092" color="#2E472E"
+	>
+	<mx:Style>
+		FormItem{
+			font-weight:bold;
+		}
+		
+		TextInput{
+			corner-radius:6;
+			
+		}
+		
+		Panel{
+			borderThicknessLeft: 0;
+   			borderThicknessTop: 0;
+   			borderThicknessBottom: 0;
+   			borderThicknessRight: 0;
+   			titleStyleName: "mypanelTitle";
+		}
+		
+		.mypanelTitle {
+		   color: #ffffff;
+		   fontWeight: bold;
+		}
+		
+		
+			
+	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import mx.effects.easing.Back;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.command.TestCommand;
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.shatayu.event.ShatayuEvent;
+			 import mx.controls.Alert;
+			 
+			 
+			 public function resultCallBack(msg:String):void{
+			 	Alert.show("Check callback message "+ msg);
+			 }
+			 
+			 private function onCreationComplete():void{
+			 	var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.LIST_DRUG_COMMAND,null);
+			 	event.dispatch();
+			 	
+			 	var eventP:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.LIST_PANCHKARMA_COMMAND,null);
+			 	eventP.dispatch();
+			 }
+			 
+			 private function onClick():void{
+			 	
+			 }
+			 
+			
+		]]>
+	</mx:Script>
+	
+	<service1:Services id="services"/>
+	<controller:ShatayuController id="sController"/>
+	<mx:HDividedBox width="100%" height="100%" >
+	<comp:LeftPanel width="15%" height="100%" />
+	<mx:Panel width="85%" height="100%" headerColors="[#445B3F,#445B3F]"
+		 borderAlpha= "1" backgroundColor="#E6EFC4" >
+		<mx:ViewStack id= "viewStack" width="100%" height="100%">
+		<comp:WelcomeScreen width="100%" height="100%"/>
+		<compdrug:AddPanchkarma id = "addPanchkarma" width="100%" height="100%"/>
+		<compdrug:ListPanchkarma id = "listPanchkarma" width="100%" height="100%"/>
+		<compdrug:AddDrug id="addDrug" width="100%" height="100%"/>
+		<compdrug:ListDrugs id="listDrug" width="100%" height="100%"/>
+		<comppattient:PatientView  id="addPatient" width="100%" height="100%"/>
+		<comppattient:ListPatients id="listPatient" width="100%" height="100%"/>
+		<misc:ListTreatmentByDate id="listTreatmentsByDate"  width="100%" height="100%"/>
+	</mx:ViewStack>
+	</mx:Panel>
+	
+	
+</mx:HDividedBox>
+
+</mx:Application>

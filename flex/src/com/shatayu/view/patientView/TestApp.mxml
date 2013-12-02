@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical"
+	creationComplete="onCreationComplet()">
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			import mx.collections.ArrayCollection;
+			[Bindable]
+			public var arrColl:ArrayCollection = new ArrayCollection();
+			private function onCreationComplet():void{
+				
+				for(var i:Number = 0;i<5;i++){
+					var mp:Object = new Object();
+					mp["dateC"] = new Date();
+					mp["sns"] ="Signs and Symptoms"+i;
+					mp["tong"] = "Tongue"+i;
+					mp["pulse"] = "Pulse"+i;
+					var secColl:ArrayCollection = new ArrayCollection();
+					for(var j:Number = 0;j< 3;j++){
+						var secmp:Object = new Object();
+						secmp["drugId"]=j;
+						secmp["duration"]="2-2-2";
+						secmp["noofdays"]=5;
+						secColl.addItem(secmp);						
+					}
+					mp["treatmenDrugtList"] = secColl;
+					arrColl.addItem(mp);
+				}
+			}
+			
+			private function openPopUp():void{
+				PopUpManager.createPopUp(this,AddTreatment);
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:DataGrid dataProvider="{arrColl}" variableRowHeight="true" width="800" height="600">
+		<mx:columns>
+			<mx:DataGridColumn dataField  = "dateC" headerText="Date">
+				
+			</mx:DataGridColumn>
+			<mx:DataGridColumn dataField = "sns" headerText="Signs and Symptoms">
+				
+			</mx:DataGridColumn>
+			<mx:DataGridColumn dataField = "rd"  headerText="Rx and Duration"  itemRenderer="SignSympDurationView">
+				
+			</mx:DataGridColumn >
+			<mx:DataGridColumn dataField = "tong" headerText="Tongue" >
+				
+			</mx:DataGridColumn>
+			<mx:DataGridColumn dataField = "pulse" headerText="Pulse" >
+				
+			</mx:DataGridColumn>
+		</mx:columns>
+		
+	</mx:DataGrid>
+	<mx:Button label="OPenPopUp" click = "openPopUp()"/>
+</mx:Application>

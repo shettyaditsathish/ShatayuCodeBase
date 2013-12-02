@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="400" height="300"
+				initialize="onCreation()">
+	<mx:Script>
+		<![CDATA[
+			import mx.containers.TitleWindow;
+			import mx.controls.Alert;
+			import mx.controls.Button;
+			import mx.core.Application;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			
+			private var button:Button = new Button();
+			private var dragFlag:Boolean = false;
+			private var uiComp:UIComponent = new UIComponent(); 
+			
+			private function onCreation():void{
+				this.addEventListener(FlexEvent.CREATION_COMPLETE,onCreateT);
+				systemManager.addEventListener(MouseEvent.MOUSE_UP,onMouseup);
+				systemManager.addEventListener(MouseEvent.MOUSE_MOVE,onMouseMove);
+			}
+			
+			private function onCreateT(ev:Event):void{
+				button.label = "DRG";
+				button.width = 10;
+				button.height = 10;
+				button.x = this.width ;
+				button.y = this.height ;
+				button.addEventListener(MouseEvent.MOUSE_DOWN,onbtClick);
+				this.rawChildren.addChild(button);
+			}
+			
+			
+			private function onbtClick(ev:MouseEvent):void{
+				dragFlag = true;
+				Application.application.addChild(uiComp);
+			}
+			
+			private function onMouseMove(ev:MouseEvent):void{
+				if(!dragFlag)
+					return;
+				
+				//Alert.show("Came in");
+				uiComp.graphics.clear();
+				uiComp.graphics.lineStyle(3,0x00ff00);
+				var pt:Point = Application.application.localToGlobal(new Point(this.x ,this.y));
+				var rectWidth:Number = 0 ; 
+				var rectHeight:Number = 0 ;
+				if(ev.stageX > pt.x){
+					rectWidth = ev.stageX - pt.x;
+				}else{
+					rectWidth = pt.x - ev.stageX ;
+				}
+				
+				if(ev.stageY > pt.y){
+					rectHeight = ev.stageY - pt.y;
+				}else{
+					rectHeight = pt.y - ev.stageY ;
+				}
+				
+				
+				uiComp.x = pt.x;
+				uiComp.y = pt.y;
+				uiComp.graphics.drawRect(0,0,rectWidth,rectHeight);
+				var pt2:Point = this.globalToLocal(new Point(ev.stageX ,ev.stageY));
+				button.x = pt2.x ;
+				button.y = pt2.y ;
+				
+				
+			}
+			
+			private function onMouseup(ev:MouseEvent):void{
+				if(!dragFlag){
+					return;
+				}
+				
+				var pt:Point = Application.application.localToGlobal(new Point(this.x ,this.y));
+				pt.x = pt.x + this.width;
+				pt.y = pt.y + this.height;
+				this.width = ev.stageX - pt.x + this.width;	
+				this.height = ev.stageY - pt.y + this.height;	
+				pt = Application.application.localToGlobal(new Point(this.x ,this.y));
+				uiComp.graphics.clear();
+				Application.application.removeChild(uiComp);
+				dragFlag = false;
+			}
+			
+		]]>
+	</mx:Script>
+</mx:TitleWindow>

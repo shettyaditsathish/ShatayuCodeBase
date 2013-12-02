@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical"
+	showCloseButton="true" close="{PopUpManager.removePopUp(this)}">
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			import mx.collections.ArrayCollection;
+			[Bindable]
+			public var totalArr:ArrayCollection;
+			
+			[Bindable]
+			public var treatmentText:String;
+			
+			[Bindable]
+			public var panchkarmaText:String;
+			
+			[Bindable]
+			public var grandTotalText:String;
+		]]>
+	</mx:Script>
+	<mx:Label text="Final Tally " />
+	<mx:DataGrid id="finalDg" dataProvider="{totalArr}" width="100%">
+		<mx:columns>
+			<mx:DataGridColumn dataField="subject" headerText="Subject" />
+			<mx:DataGridColumn dataField="numberOf" headerText="Number of" />
+			<mx:DataGridColumn headerText="Total Amount" dataField="amt" />
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<mx:FormItem label=" ">
+		<mx:Label id= "tt" fontWeight="normal" htmlText="{treatmentText}"/>
+	</mx:FormItem>
+	<mx:FormItem label=" " >
+		<mx:Label id= "pt" fontWeight="normal" htmlText="{panchkarmaText}"/>
+	</mx:FormItem>
+	<mx:FormItem label="Grand Total">
+		<mx:Label id= "gt" fontWeight="normal" htmlText="{grandTotalText}"/>
+	</mx:FormItem>
+	<mx:HBox width = "100%" horizontalAlign="center">
+		<mx:Button label="close" click="{PopUpManager.removePopUp(this)}" styleName="myButton"/>
+	</mx:HBox>
+</mx:TitleWindow>

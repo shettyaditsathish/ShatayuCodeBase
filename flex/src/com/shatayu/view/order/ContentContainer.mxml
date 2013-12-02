@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" maxHeight="300">
+	<mx:Metadata>
+		[Event(name="costChanged" type="flash.events.Event")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.TextInput;
+			import com.shatayu.view.patientView.ComboBox;
+			public function onNextRow():void{
+				var hbox:HBox = new HBox();
+				var medCombo:ComboBox= new ComboBox();
+				//Need to populate
+				//medCombo.dataProvider = null;
+				hbox.addChild(medCombo);
+				var descr:TextInput = new TextInput();
+				hbox.addChild(descr);
+				var qtyType:ComboBox = new ComboBox();
+				var arr:ArrayCollection = new ArrayCollection();
+				arr.addItem("Num"):
+				arr.addItem("Num"):
+				arr.addItem("Num"):
+				arr.addItem("Num"):
+				arr.addItem("Num"):
+			}
+		]]>
+	</mx:Script>	
+	<mx:Button label="Next Row" click="onNextRow()"/>
+	<mx:HBox>
+		<mx:TextInput editable="false" label="Medicine"/>
+		<mx:TextInput editable="false" label = "Description"/>
+		<mx:TextInput editable="false" label="Qty Type"/>
+		<mx:TextInput editable="false" label="Quantity"/>
+		<mx:TextInput editable="false" label="Amount"/>	
+	</mx:HBox>	
+</mx:VBox>

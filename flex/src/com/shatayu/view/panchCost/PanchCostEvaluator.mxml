@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:mv="com.shatayu.view.panchCost.*" layout="vertical" width="500" 
+	showCloseButton="true" close="{PopUpManager.removePopUp(this)}">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager;
+			import com.shatayu.model.Panchkarma;
+			
+			[Bindable]
+			public var panchkarma:Panchkarma = null;
+			
+			[Bindable]
+			public var total:Number = 0;
+			
+			[Bindable]
+			public var noOfdays:Number = 0;
+			
+			private var _callback:Function;
+			
+			public function setCallBacFunction(callback:Function):void{
+				_callback = callback;
+			}
+			
+			private function onSave():void{
+				if( isNaN(parseFloat(finalTot.text))){
+					Alert.show("The total is not valid number");
+					return;
+				}
+				_callback(finalTot.text);
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+	<mv:CostMainContainer id="csm" onTotal="{total = (csm.calc() * parseInt(noofdaysF.text))}" panchkarma="{panchkarma}" creationComplete="{total = (csm.calc() * noOfdays)}"/>
+	<mx:FormItem label="No of days">
+		<mx:TextInput id= "noofdaysF" text="{noOfdays}" change="{csm.dispatchEvent(new Event('onTotal'))}"/>
+	</mx:FormItem>
+	<mx:FormItem label="Total">
+		<mx:TextInput id= "finalTot" text="{total}"/>
+	</mx:FormItem>
+	<mx:HBox>
+		<mx:Button label="Save" click = "onSave()"/>
+		<mx:Button label="Cancel" click="{PopUpManager.removePopUp(this)}"/>
+	</mx:HBox>
+</mx:TitleWindow>

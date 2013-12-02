@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"  width="600" height="570" 
+	creationComplete="onCreationComplete()" showCloseButton="true" 
+	close="{PopUpManager.removePopUp(this)}" title="Add Treatment" 
+	defaultButton="{submitBtn}">
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.view.misc.TreatmentEstimation;
+			import com.shatayu.model.Drug;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.event.ShatayuEvent;
+			import com.shatayu.model.Patient;
+			import com.shatayu.model.TreatmentDrug;
+			import mx.managers.PopUpManager;
+			import mx.binding.utils.BindingUtils;
+			import com.shatayu.model.Treatment;
+			import mx.controls.Alert;
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			public var arrCollection:ArrayCollection = new ArrayCollection();;
+			
+			private static var count:Number=0;
+			public var _parentObj:Object;
+			public var treatment:Treatment = new Treatment();
+			private var currentAmountPaid:Number = 0;
+			
+			public function set parentObj(value:Object):void{
+				treatment.patient = Patient(value.patientData);
+				_parentObj = value;
+			}
+			
+			public function get parentObj():Object{
+				return _parentObj;
+			}
+			
+			public function removeTreatmentDrug(trd:TreatmentDrug):void{
+				ArrayCollection(dg.dataProvider).removeItemAt(ArrayCollection(dg.dataProvider).getItemIndex(trd));
+			}
+			
+			public function set loadDataObj(value:Object):void{
+				treatment.treatmentId = Treatment(value).treatmentId;
+				treatment.pulse = Treatment(value).pulse;
+				treatment.treatmnetDate = Treatment(value).treatmnetDate;
+				treatment.signsSymptons = Treatment(value).signsSymptons;
+				treatment.tongue = Treatment(value).tongue;
+				treatment.treatmentDrug = Treatment(value).treatmentDrug;
+				treatment.results = Treatment(value).results;
+				treatment.amountPaid = Treatment(value).amountPaid;
+				treatment.paymentType = Treatment(value).paymentType;
+				treatment.paid = Treatment(value).paid;
+				treatment.balance = Treatment(value).balance;
+				if(treatment.balance == 0){
+					
+					currentAmountPaid = treatment.amountPaid;
+				}else{
+						
+					currentAmountPaid = treatment.balance;
+				}
+				
+				
+				//treatment.cost = Treatment(value).cost;
+				
+				//treatment.patientId = Treatment(value).patientId;
+				
+				if(treatment.treatmentDrug != null)
+					arrCollection = treatment.treatmentDrug;
+				treatmentDate.selectedDate = treatment.treatmnetDate;
+				sns.text = treatment.signsSymptons;
+				tongue.text = treatment.tongue;
+				pulse.text = treatment.pulse;
+				results.text = treatment.results;
+				var actualCost:Number = isNaN(treatment.amountPaid)?0:treatment.amountPaid;
+				cost.text =  actualCost+"";
+				bal.text = treatment.balance+"";
+				if(treatment.treatmentId <= 0 || isNaN(treatment.treatmentId)){
+					if(Patient(_parentObj.patientData).patientId == 0 || isNaN(Patient(_parentObj.patientData).patientId)){
+						paymentType.selectedIndex = 1;
+					}else{
+						paymentType.selectedIndex = 0;
+					}
+					onChangePayment();
+				}else{
+					if(treatment.paymentType == "Regular"){
+						paymentType.selectedIndex = 0;
+					}else if(treatment.paymentType == "New"){
+						paymentType.selectedIndex = 1;
+					}else{
+						paymentType.selectedIndex = 2;
+					}
+				}
+				
+				/*if(actualCost <= 0){
+					trace("Entered in ac");
+					if(Patient(_parentObj.patientData).patientId == 0 || isNaN(Patient(_parentObj.patientData).patientId)){
+						treatment.cost = 180+"";
+					}else{
+						treatment.cost = 150+"";
+					}
+				}
+				
+				trace("Check treatementId "+treatment.treatmentId);
+				trace("treatment.amountPaid "+treatment.amountPaid);
+				trace("treatment.cost "+treatment.cost);
+				
+				if(treatment.treatmentId <= 0 || isNaN(treatment.treatmentId)){
+					cost.text =  treatment.cost+"";
+				}else if(treatment.amountPaid >  0){
+					cost.text =  treatment.amountPaid +"";
+				}else{
+					cost.text =  "0";
+				}*/
+				
+				if(treatment.paid == "N"){
+					paid.selectedIndex = 1;
+				}else{
+					paid.selectedIndex = 0;
+				}
+				onChange();
+				onCreationComplete();
+			}
+			
+			private function onCreationComplete():void{
+				PopUpManager.centerPopUp(this);
+				treatmentDate.selectedDate = treatment.treatmnetDate;
+				if(treatment.treatmnetDate == null){
+					treatmentDate.selectedDate = new Date();
+				}
+				sns.text = treatment.signsSymptons;
+				tongue.text = treatment.tongue;
+				pulse.text = treatment.pulse;
+				results.text = treatment.results;
+				if(treatment.balance == 0){
+					currentAmountPaid = treatment.amountPaid;
+				}else{
+					currentAmountPaid = treatment.balance;
+				}
+				
+				
+				var actualCost:Number = isNaN(treatment.amountPaid)?0:treatment.amountPaid;
+				cost.text =  actualCost+"";
+				if(treatment.treatmentId <= 0 || isNaN(treatment.treatmentId)){
+					if(Patient(_parentObj.patientData).patientId == 0 || isNaN(Patient(_parentObj.patientData).patientId)){
+						paymentType.selectedIndex = 1;
+					}else{
+						paymentType.selectedIndex = 0;
+					}
+					onChangePayment();
+				}else{
+					if(treatment.paymentType == "Regular"){
+						paymentType.selectedIndex = 0;
+					}else if(treatment.paymentType == "New"){
+						paymentType.selectedIndex = 1;
+					}else{
+						paymentType.selectedIndex = 2;
+					}
+				}
+				/*trace("actualCost "+actualCost);
+				if(actualCost <= 0){
+					trace("Entered in ac");
+					if(Patient(_parentObj.patientData).patientId == 0 || isNaN(Patient(_parentObj.patientData).patientId)){
+						treatment.cost = 180+"";
+					}else{
+						treatment.cost = 150+"";
+					}
+				}
+				
+				trace("Check treatementId "+treatment.treatmentId);
+				trace("treatment.amountPaid "+treatment.amountPaid);
+				trace("treatment.cost "+treatment.cost);
+				
+				if(treatment.treatmentId <= 0 || isNaN(treatment.treatmentId)){
+					cost.text =  treatment.cost+"";
+				}else if(treatment.amountPaid >  0){
+					cost.text =  treatment.amountPaid +"";
+				}else{
+					cost.text =  "0";
+				}*/
+				
+				if(treatment.paid == "N"){
+					paid.selectedIndex = 1;
+				}else{
+					paid.selectedIndex = 0;
+				}
+				onChange();
+				BindingUtils.bindProperty(treatment,"treatmnetDate",treatmentDate,"selectedDate");
+				BindingUtils.bindProperty(treatment,"signsSymptons",sns,"text");
+				BindingUtils.bindProperty(treatment,"tongue",tongue,"text");
+				BindingUtils.bindProperty(treatment,"pulse",pulse,"text");
+				BindingUtils.bindProperty(treatment,"results",results,"text");
+				//BindingUtils.bindProperty(treatment,"paid",paid,"selectedItem");
+				BindingUtils.bindProperty(treatment,"amountPaid",cost,"text");
+				BindingUtils.bindProperty(treatment,"balance",bal,"text");
+				
+			}
+			
+			private function addRow():void{
+				var obj:TreatmentDrug = new TreatmentDrug();
+				if(treatment !=  null)
+					obj.treatment = treatment;
+				count++;
+				dg.dataProvider.addItem(obj);
+			}	
+			
+			private function removeSelectedRow():void{
+				trace("Check index  "+dg.selectedIndex);
+				//trace("Check id"+arrCollection.getItemAt(dg.selectedIndex).drugId);
+				
+				if(!isNaN(TreatmentDrug(dg.selectedItem).treatmentDrugId) || TreatmentDrug(dg.selectedItem).treatmentDrugId > 0){
+					var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.DELETE_TREATMENT_DRUG_COMMAND,TreatmentDrug(dg.selectedItem));
+				 	event.dispatch();
+				}else{
+					dg.dataProvider.removeItemAt(dg.selectedIndex);
+				}
+			}
+			
+			private function submit():void{
+				
+				if(isNaN(parseFloat(cost.text)) || parseFloat(cost.text)<=0){
+					cost.errorString = "Enter Amount"; 
+					Alert.show("Enter the amount");
+					return;
+				}
+				treatment.treatmentDrug = arrCollection;
+				//treatment.treatmentDrug.treatment = treatment;
+				var treatmentColl:ArrayCollection = Patient(parentObj.patientData).treatment;
+				//var resultantTreatmentColl:ArrayCollection = new ArrayCollection();
+				var treatmentDrugArr:ArrayCollection = treatment.treatmentDrug;
+				for(var m:int =0;m<treatmentDrugArr.length;m++){
+					var treatmentDrugObj:TreatmentDrug = treatmentDrugArr.getItemAt(m) as TreatmentDrug;
+					trace("m  "+m+" trdobj "+treatmentDrugObj.noOfDays);
+					if((isNaN(treatmentDrugObj.noOfDays) ||  treatmentDrugObj.noOfDays == 0) && m > 0){
+						treatmentDrugObj.noOfDays = (treatmentDrugArr.getItemAt(m -1) as TreatmentDrug).noOfDays;
+					}
+					
+					if(treatmentDrugObj.drugId == -1 || isNaN(treatmentDrugObj.drugId) ){
+						Alert.show("Please enter valid drug. one or more of your drug entry is invalid ");
+						return;
+					}	
+				}
+				
+				if(treatmentDrugArr == null || (treatmentDrugArr != null && treatmentDrugArr.length == 0)){
+					Alert.show("Please provide the drugs ");
+					return;
+				}
+				
+				
+				if(treatmentColl == null){
+					treatmentColl = new ArrayCollection();
+				}
+				for(var i:uint =0 ;i<treatmentColl.length;i++){
+					if(Treatment(treatmentColl[i]).treatmentId == treatment.treatmentId){
+						treatmentColl[i] = treatment;
+						
+						break;
+					}
+				}
+				
+				if(!treatmentColl.contains(treatment)){
+					treatmentColl.addItem(treatment);
+				}
+				//resultantTreatmentColl.addItem(treatment);
+				treatment.patient = _parentObj.patientData;
+				
+				Patient(parentObj.patientData).treatment = treatmentColl;
+				
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.ADD_PATIENT_COMMAND,_parentObj.patientData);
+			 	event.dispatch();
+			 	PopUpManager.removePopUp(this);
+				
+				//Code pending to hit server side
+				
+				/*for(var i:int = 0 ;i<arrCollection.length;i++){
+					var mp:Object = arrCollection.getItemAt(i);
+					var treatment:TreatmentDrug
+					trace("i"+i + " drugId "+mp["drugId"]+" duration "+ mp["duration"] + " noofdays  "+mp["noofdays"]);
+				}*/
+			}	
+			
+			private function onChange():void{
+				treatment.paid = paid.selectedItem.label;
+			}
+			
+			private function onChangePayment():void{
+				treatment.paymentType = paymentType.selectedItem.label;
+			}
+			private function onAmountChanged():void{
+				if(!isNaN(parseFloat(cost.text)) && parseFloat(cost.text)>0){
+					if(paymentType.selectedIndex == 1)
+						return;
+					paymentType.selectedIndex = 2;
+					onChangePayment();
+				}
+			}
+			
+			private function calcBalance():void{
+				if( isNaN(parseFloat(paidCurrent.text)) || parseFloat(paidCurrent.text) == 0){
+					
+					return;
+				}
+				
+				if(isNaN(currentAmountPaid)){
+					currentAmountPaid = parseFloat(cost.text);	
+				}
+				bal.text = (currentAmountPaid -  parseFloat(paidCurrent.text)) +"";
+				
+			}
+			
+			private function showTrCalc():void{
+				var popup:TreatmentEstimation =  new TreatmentEstimation();
+				popup.parentObj = this;
+				popup.treatmentDrugColl = arrCollection;
+				PopUpManager.addPopUp(popup,this);
+				PopUpManager.centerPopUp(popup);
+			}
+			
+			public function saveCost(caltrCost:String):void{
+				cost.text = caltrCost;
+				cost.dispatchEvent(new Event(Event.CHANGE));
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:FormItem label = "Treatment Date">
+		<mx:DateField id="treatmentDate" text="{treatmentDate.selectedDate = new Date()}" formatString="DD/MM/YYYY"/>
+	</mx:FormItem>
+	
+	<mx:FormItem label = "Signs and Symptoms">
+		<mx:TextArea id="sns"/>
+	</mx:FormItem>
+	
+	<mx:HBox>
+		<mx:FormItem label = "Tongue">
+			<mx:TextArea id="tongue"/>
+		</mx:FormItem>
+		<mx:FormItem label = "Pulse">
+			<mx:TextArea id="pulse"/>
+		</mx:FormItem>	
+	</mx:HBox>
+	<mx:FormItem label = "Investigations">
+			<mx:TextArea id="results"/>
+	</mx:FormItem>
+	<mx:VBox>
+		<mx:FormItem label = "Total Amount">
+			<mx:HBox>
+				<mx:TextInput id="cost" change="onAmountChanged()"/>
+				<mx:Button label="calc" click="showTrCalc()"/>
+			</mx:HBox>			
+		</mx:FormItem>
+		<mx:HBox>
+			<mx:FormItem label = "Amount Paid">
+				<mx:TextInput id="paidCurrent" change="calcBalance()"/>
+			</mx:FormItem>
+			
+			<mx:FormItem label = "Balance">
+				<mx:Label id="bal" text="0"/>
+			</mx:FormItem>
+		</mx:HBox>
+		
+	</mx:VBox>
+	<mx:FormItem label = "Paid Status">
+		<mx:ComboBox id="paid" change="onChange()">
+			<mx:dataProvider>
+				<mx:Array>
+					<mx:Object label="Y"/>
+					<mx:Object label = "N"/>
+				</mx:Array>
+			</mx:dataProvider>
+		</mx:ComboBox>
+	</mx:FormItem>
+	
+	<mx:FormItem label = "Pay Type" height="0" visible="false">
+		<mx:ComboBox id="paymentType" change="onChangePayment()" height="0" visible="false">
+			<mx:dataProvider>
+				<mx:Array>
+					<mx:Object label="Regular"/>
+					<mx:Object label = "New"/>
+					<mx:Object label= "Custom"/>
+				</mx:Array>
+			</mx:dataProvider>
+		</mx:ComboBox>
+	</mx:FormItem>
+	
+	<mx:HBox>
+		<mx:Button label="Add Row" click="addRow()" styleName="myButton">
+			
+		</mx:Button>
+		
+		<mx:Button label="Remove Row" click="removeSelectedRow()" styleName="myButton">
+			
+		</mx:Button>
+		
+	</mx:HBox>
+	<mx:DataGrid id = "dg" dataProvider="{arrCollection}" variableRowHeight="true">
+		<mx:columns>
+			<mx:DataGridColumn dataField="drugId" itemRenderer="com.shatayu.view.patientView.MedCombo"/>
+			<mx:DataGridColumn dataField="duration" itemRenderer="com.shatayu.view.patientView.MedDuration"/>
+			<mx:DataGridColumn dataField="noofdays" itemRenderer="com.shatayu.view.patientView.NoOfDays"/>
+			<mx:DataGridColumn dataField="emptyCol1" />
+		</mx:columns>
+		
+	</mx:DataGrid>
+	<mx:HBox horizontalAlign="center">
+			<mx:Button id= "submitBtn" label="Submit Data" styleName="myButton"/>		
+		
+	</mx:HBox>
+		
+	<mx:StringValidator source="{sns}" property="text" 
+        required="true" requiredFieldError="This field is compulsory"
+        trigger="{submitBtn}" triggerEvent="click" valid="submit()"
+        />
+</mx:TitleWindow>

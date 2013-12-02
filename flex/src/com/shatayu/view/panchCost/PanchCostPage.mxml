@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+				width ="100%" height="100%"
+				xmlns:mv="com.shatayu.view.panchCost.*">
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.model.PanchkarmaCost;
+			import com.shatayu.model.ModelLocatorImp;
+			import com.shatayu.model.Panchkarma;
+			import mx.controls.Alert;
+			import mx.rpc.Fault;
+			import com.shatayu.event.ShatayuEvent;
+			import mx.collections.ArrayCollection;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.command.SavePanchkarmaCostCommand;
+			
+			[Bindable]
+			public var total:Number = 0;
+			
+			private var _oldPanchCostColl:ArrayCollection;
+			
+			private function save():void{
+				_oldPanchCostColl = csm.panchkarma.panchkarmaCost;
+				csm.panchkarma.panchkarmaCost = csm.getCostCollection();
+				Alert.show((csm.panchkarma.panchkarmaCost.getItemAt(0) as PanchkarmaCost).attrName);
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.SAVE_PANCHKARMA_COST_COMMAND,csm.panchkarma,onSavePanchCost);
+        		event.dispatch();
+			}
+			
+			public function onSavePanchCost(obj:Object):void{
+				if(obj is Fault){
+	        		Alert.show("Error"+obj);
+	        		csm.panchkarma.panchkarmaCost = _oldPanchCostColl;
+	        		return;
+	        	}
+			}
+			
+			private function onChange():void{
+				total = 0;
+				csm.panchkarma = panchList.selectedItem as Panchkarma;
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:ComboBox id= "panchList" dataProvider="{ModelLocatorImp.getInstance().panchkarmaList}" change = "onChange()" labelField="panchkarmaName" selectedIndex="-1"/>
+	<mv:CostMainContainer id="csm" onTotal="{total = csm.calc()}" creationComplete="{total = (csm.calc())}"/>
+	<mx:FormItem label="Total">
+		<mx:Label text="{total}"/>
+	</mx:FormItem>
+	<mx:Button label="Save" click="save()"/>
+</mx:VBox>

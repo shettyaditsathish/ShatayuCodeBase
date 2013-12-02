@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" width="300" height="300"
+	showCloseButton="true" close="{PopUpManager.removePopUp(this)}">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.managers.PopUpManager;
+			import mx.core.UIComponent;
+			import com.shatayu.util.BootStrap;
+			import flash.events.Event;
+			import com.shatayu.model.Treatment;
+			import com.shatayu.model.TreatmentDrug;
+			import com.shatayu.model.Drug;
+			import com.shatayu.util.ShatayuUtility;
+			
+			
+			public var treatmentDrugColl:ArrayCollection;
+			public var parentObj:Object;
+			
+			protected function onCreate():void{
+				//for each(var childXML:XML in BootStrap.getInstance().expXML.children()){
+					mainCont.addChild(getComponent("Fixed Costs",BootStrap.getInstance().expXML.@total+""));
+				//}
+				medCost.text = calcMedicineCost() +"";
+				calcFinalCost();
+			}
+			
+			private function calcMedicineCost():Number{
+				var totalMedCost:Number = 0;
+				var noofdaysTemp:Number = 0;
+				for each(var trDrug:TreatmentDrug in treatmentDrugColl){
+					var dr:Drug = ShatayuUtility.getDrugById(trDrug.drugId);
+					var arr:Array = trDrug.duration.split("-");
+					var noOftablets:Number = 0;
+					for(var i:int =0;i<arr.length;i++){
+						if(!isNaN(parseInt(arr[i]+"")))
+							noOftablets = noOftablets + parseInt(arr[i]+"");
+					}
+					if(!isNaN(trDrug.noOfDays)){
+						if(trDrug.noOfDays > 0 ){
+							noofdaysTemp = trDrug.noOfDays;
+						}
+					}
+					
+					var cost:Number = noOftablets * dr.drugCost * noofdaysTemp;
+					totalMedCost = totalMedCost + cost
+				}
+				
+				return totalMedCost;
+			}
+			
+			private function calcFinalCost():void{
+				var finalCost:Number = 0;
+				for(var i:int =0 ;i< mainCont.numChildren;i++){
+					var formItem:FormItem = mainCont.getChildAt(i) as FormItem;
+					var tx:TextInput  =  formItem.getChildAt(0) as TextInput;
+					finalCost = finalCost + parseFloat(tx.text);
+				}
+				tcalcCost.text = finalCost + "";
+			}
+			
+			private function getComponent(expType:String,val:String=""):UIComponent{				
+				
+				var formItem:FormItem = new FormItem();
+				formItem.label = expType;
+				
+				var textInp:TextInput = new TextInput();
+				textInp.text = val;
+				textInp.addEventListener(Event.CHANGE, onChange);
+				formItem.addChild(textInp);
+				
+				return formItem;
+			}
+			
+			private function onChange(event:Event):void{
+				calcFinalCost();
+			}
+			
+			private function onSaveCost():void{
+				parentObj.saveCost(tcalcCost.text);
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+	<mx:Form id="mainCont" creationComplete="onCreate()">
+		<mx:FormItem label="Medicine Cost">
+			<mx:TextInput id = "medCost" change="onChange(event)"/>		
+		</mx:FormItem>
+	</mx:Form>
+	<mx:FormItem label="Total Calculated Cost">
+		<mx:TextInput id = "tcalcCost" />		
+	</mx:FormItem>
+	<mx:Button label = "Save Cost" click="onSaveCost()"/> 
+</mx:TitleWindow>

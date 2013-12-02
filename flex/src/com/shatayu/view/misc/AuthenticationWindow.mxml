@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical"
+	 width="400" height="300" creationComplete="{currentState = 'enterPasswd'}" showCloseButton="true"
+	 close="{PopUpManager.removePopUp(this)}">
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			import mx.core.Application;
+			import mx.controls.Alert;
+			import com.shatayu.util.FileUtility;
+			private var filePath:String = File.applicationStorageDirectory.nativePath+"/"+"secretFile.text";
+			private function submit():void{
+				
+				var pswd:String = decrypt(FileUtility.readFile(filePath));
+				if(passwd.text == pswd){
+					Application.application.lPanel.currentState = "";
+				}else{
+					Application.application.lPanel.currentState = "restrictedUserState";
+					Alert.show("Password is Wrong");
+					return;
+				}
+				PopUpManager.removePopUp(this);
+			}
+			
+			private function changePasswdFunc():void{
+				var pswd:String = "";
+				try{
+					pswd = decrypt(FileUtility.readFile(filePath));
+				}catch(e:Error){
+					pswd = "";
+				}
+				if(passwd.text != pswd){
+					Alert.show("Password does not match");
+					return;
+				}
+				encrypt(changePasswd.text);
+				FileUtility.writeFile(encrypt(changePasswd.text),filePath);
+			}
+			
+			private function encrypt(source:String):String{
+				var arr:Array = source.split("");
+				arr = arr.reverse();
+				var finalResult:String  = "";
+				for each(var paswdChar:String in arr){
+					var charCode:Number = paswdChar.charCodeAt(0);
+					if(finalResult.length == 0){
+						finalResult = finalResult +(((charCode + 99)*7)-1);
+					}else{
+						finalResult = finalResult +"."+(((charCode + 99)*7)-1);	
+					}
+				}
+				
+				return finalResult;
+			}
+			
+			private function decrypt(source:String):String{
+				var decryptSource:String = source;
+				var decrArr:Array = decryptSource.split(".");
+				
+				var finArr:Array = new Array();
+				for each(var decrStr:String in decrArr){
+					var decCharCode:Number = ((parseInt(decrStr) + 1)/7)-99;
+					var actualChar = String.fromCharCode(decCharCode);
+					finArr.push(actualChar);
+				}
+				
+				return finArr.reverse().join("");
+			}
+			
+			
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="changePasswd">
+			<mx:RemoveChild target="{submitCont}"/>
+			<mx:RemoveChild target="{chPwdBtn}"/>
+			<mx:AddChild relativeTo="{passwdCont}" position="after">
+                <mx:target>
+                    <mx:FormItem label="Change Password" id= "changePasswdCont">
+						<mx:TextInput id="changePasswd"/>
+					</mx:FormItem>
+                </mx:target>
+            </mx:AddChild>
+            <mx:AddChild relativeTo="{this}" position="lastChild">
+                <mx:target>
+                    
+                    <mx:LinkButton label="Enter Password" id = "epBtn" click="{currentState = 'enterPasswd'}"/>
+                </mx:target>
+            </mx:AddChild>
+            <mx:AddChild relativeTo="{main}" position="lastChild">
+                <mx:target>
+                    <mx:FormItem label="" id= "changePasswdBtnCont">
+						<mx:Button label="Change Password" click="changePasswdFunc()"/>
+					</mx:FormItem>
+                </mx:target>
+            </mx:AddChild>
+		</mx:State>
+		<mx:State name="enterPasswd">
+			<mx:RemoveChild target="{changePasswdCont}"/>
+			<mx:RemoveChild target="{epBtn}"/>
+			<mx:RemoveChild target="{changePasswdBtnCont}"/>
+			
+		</mx:State>
+	</mx:states>
+	<mx:Form id= "main">
+		<mx:FormItem label="Password" id= "passwdCont" >
+			<mx:TextInput id="passwd" displayAsPassword="true" />
+		</mx:FormItem>
+		
+		
+		
+		<mx:FormItem label="" id= "submitCont">
+			<mx:Button label="Submit" click="submit()"/>
+		</mx:FormItem>
+		
+	</mx:Form>
+	
+	<mx:LinkButton label="change Password" id= "chPwdBtn" click="{currentState = 'changePasswd'}"/>
+</mx:TitleWindow>

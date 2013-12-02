@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.model.Drug;
+			
+			private var tempObj:Object;
+			
+			override public function set data(value:Object):void{
+				super.data = value;
+				if(value == null)return;
+				tempObj = value;
+				if(drugName){
+					drugName.text = (tempObj['drug'] as Drug).drugName;
+				}
+				
+				if(cb){
+					cb.selected=tempObj.selected;
+				}
+			}
+		]]>
+	</mx:Script>
+	<mx:CheckBox id = "cb" change="{tempObj.selected = cb.selected}" />
+	<mx:Label id = "drugName" />
+</mx:HBox>

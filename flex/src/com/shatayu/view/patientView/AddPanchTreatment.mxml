@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="100%" height="100%" showCloseButton="true" close="{PopUpManager.removePopUp(this)}"
+	creationComplete="onCreationComplete()" xmlns:mv="com.shatayu.view.patientView.*"
+	title="Add Panchkarma Treatment" defaultButton="{submitBtn}">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import com.shatayu.model.Panchkarma;
+			import mx.collections.ArrayCollection;
+			import com.shatayu.model.Patient;
+			import com.shatayu.model.PatientPanchkarma;
+			import com.shatayu.model.ModelLocatorImp;
+			import mx.managers.PopUpManager;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.event.ShatayuEvent;
+			import mx.binding.utils.BindingUtils;
+			
+			
+			public var panchTreat:PatientPanchkarma = new PatientPanchkarma();
+			public var _parentObj:Object; 
+			private var currentAmountPaid:Number = 0;
+			
+			
+			public function set parentObj(value:Object):void{
+				panchTreat.patient = Patient(value.patientData);
+				_parentObj = value;
+			}
+			
+			public function set loadDataObj(value:Object):void{
+				panchTreat.patientPanchId = PatientPanchkarma(value).patientPanchId;
+				panchTreat.panchkarmaId = PatientPanchkarma(value).panchkarmaId;
+				panchTreat.patient = PatientPanchkarma(value).patient;
+				panchTreat.startDate = PatientPanchkarma(value).startDate;
+				panchTreat.endDate = PatientPanchkarma(value).endDate;
+				panchTreat.results = PatientPanchkarma(value).results;
+				//panchTreat.cost = PatientPanchkarma(value).cost;
+				panchTreat.amountPaid = PatientPanchkarma(value).amountPaid;
+				panchTreat.paid = PatientPanchkarma(value).paid;
+				panchTreat.balance = PatientPanchkarma(value).balance;
+				panchTreat.paymentType = PatientPanchkarma(value).paymentType;
+				
+				
+				startDate.selectedDate = panchTreat.startDate;
+				endDate.selectedDate = panchTreat.endDate;
+				results.text = panchTreat.results;
+				bal.text = panchTreat.balance +"";
+				if(panchTreat.balance == 0){
+					
+					currentAmountPaid = panchTreat.amountPaid;
+				}else{
+						
+					currentAmountPaid = panchTreat.balance;
+				}
+				for(var i:int = 0;i< ModelLocatorImp.getInstance().panchkarmaList.length ;i++){
+					if(Panchkarma(ModelLocatorImp.getInstance().panchkarmaList.getItemAt(i)).panchkarmaId == panchTreat.panchkarmaId){
+						panchkarmaId.selectedIndex = i;
+						
+						break;
+					}
+				}
+				
+				if(panchTreat.patientPanchId <= 0 || isNaN(panchTreat.patientPanchId)){
+					paymentType.selectedIndex = 0;
+					onChangePayment();
+				}else{
+					if(panchTreat.paymentType == "Regular"){
+						paymentType.selectedIndex = 0;
+					}else{
+						paymentType.selectedIndex = 1;
+					}
+				}
+				
+				if(panchTreat.paid == "N"){
+					paid.selectedIndex = 1;
+				}else{
+					paid.selectedIndex = 0;
+				}
+				onPaidChange();
+				
+				onCreationComplete();
+				
+			}
+			
+			private function onCreationComplete():void{
+				PopUpManager.centerPopUp(this);
+				startDate.selectedDate = panchTreat.startDate;
+				endDate.selectedDate = panchTreat.endDate;
+				results.text = panchTreat.results;
+				bal.text = panchTreat.balance + "";
+				if(panchTreat.balance == 0){
+					
+					currentAmountPaid = panchTreat.amountPaid;
+				}else{
+						
+					currentAmountPaid = panchTreat.balance;
+				}
+				for(var i:int = 0;i< ModelLocatorImp.getInstance().panchkarmaList.length ;i++){
+					if(Panchkarma(ModelLocatorImp.getInstance().panchkarmaList.getItemAt(i)).panchkarmaId == panchTreat.panchkarmaId){
+						panchkarmaId.selectedIndex = i;
+						break;
+					}
+				}
+				if(panchTreat.paid == "N"){
+					paid.selectedIndex = 1;
+				}else{
+					paid.selectedIndex = 0;
+				}
+				onPaidChange();
+				
+				if(panchTreat.patientPanchId <= 0 || isNaN(panchTreat.patientPanchId)){
+					paymentType.selectedIndex = 0;
+					onChangePayment();
+				}else{
+					if(panchTreat.paymentType == "Regular"){
+						paymentType.selectedIndex = 0;
+					}else{
+						paymentType.selectedIndex = 1;
+					}
+				}
+				
+				amountPaid.text  = isNaN(parseFloat(panchTreat.amountPaid+""))?0+"":parseFloat(panchTreat.amountPaid+"")+"";
+				BindingUtils.bindProperty(panchTreat,"startDate",startDate,"selectedDate");
+				BindingUtils.bindProperty(panchTreat,"endDate",endDate,"selectedDate");
+				BindingUtils.bindProperty(panchTreat,"results",results,"text");
+				BindingUtils.bindProperty(panchTreat,"amountPaid",amountPaid,"text");
+				BindingUtils.bindProperty(panchTreat,"balance",bal,"text");
+				//BindingUtils.bindProperty(panchTreat,"paid",paid,"selectedLabel");
+			}
+			
+			private function submit():void{
+				if(isNaN(parseFloat(amountPaid.text)) || parseFloat(amountPaid.text)<=0){
+					amountPaid.errorString = "Enter Amount"; 
+					Alert.show("Enter the amount");
+					return;
+				}
+				var panchtreatmentColl:ArrayCollection = Patient(_parentObj.patientData).panchkarmaTreatment;
+				if(panchtreatmentColl == null){
+					panchtreatmentColl = new ArrayCollection();
+				}
+				for(var i:uint =0 ;i<panchtreatmentColl.length;i++){
+					if(PatientPanchkarma(panchtreatmentColl[i]).patientPanchId == panchTreat.patientPanchId){
+						panchtreatmentColl[i] = panchTreat;
+						break;
+					}
+				}
+				
+				if(!panchtreatmentColl.contains(panchTreat)){
+					panchtreatmentColl.addItem(panchTreat);
+				}
+				
+				panchTreat.patient = Patient(_parentObj.patientData);
+				
+				Patient(_parentObj.patientData).panchkarmaTreatment = panchtreatmentColl;
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.ADD_PATIENT_COMMAND,_parentObj.patientData);
+			 	event.dispatch();
+			 	PopUpManager.removePopUp(this);
+			}
+			
+			private function onChange():void{
+				panchTreat.panchkarmaId = panchkarmaId.selectedItem.panchkarmaId;
+				/*for(var i:int = 0;i< ModelLocatorImp.getInstance().panchkarmaList.length ;i++){
+					if(Panchkarma(ModelLocatorImp.getInstance().panchkarmaList.getItemAt(i)).panchkarmaId == panchTreat.panchkarmaId){
+						amountPaid.text = Panchkarma(ModelLocatorImp.getInstance().panchkarmaList.getItemAt(i)).cost+"";
+						panchTreat.cost = Panchkarma(ModelLocatorImp.getInstance().panchkarmaList.getItemAt(i)).cost;
+						break;
+					}
+				}*/
+			}
+			
+			private function onPaidChange():void{
+				panchTreat.paid = paid.selectedItem.label;
+			}
+			
+			private function onChangePayment():void{
+				panchTreat.paymentType = paymentType.selectedItem.label;
+			}
+			
+			private function onAmountChanged():void{
+				if(!isNaN(parseFloat(amountPaid.text)) && parseFloat(amountPaid.text)>0){
+					paymentType.selectedIndex = 2;
+					onChangePayment();
+				}
+			}
+			
+			private function calcBalance():void{
+				if( isNaN(parseFloat(paidCurrent.text)) || parseFloat(paidCurrent.text) == 0){
+					return;
+				}
+				
+				if(isNaN(currentAmountPaid)){
+					currentAmountPaid = parseFloat(amountPaid.text);	
+				}
+				bal.text = (currentAmountPaid -  parseFloat(paidCurrent.text)) +"";
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:FormItem label="Panchkarma Name">
+		<mv:ComboBox id="panchkarmaId" labelField="panchkarmaName" 
+			change="onChange()" selectedIndex="-1"
+			dataProvider="{ModelLocatorImp.getInstance().panchkarmaList}">
+		
+		</mv:ComboBox>
+	</mx:FormItem>
+		
+	<mx:FormItem label="Start date">
+		<mx:DateField id = "startDate" formatString="DD/MM/YYYY">
+		
+		
+		</mx:DateField>	
+	</mx:FormItem>
+	<mx:FormItem label="End date">
+		<mx:DateField id = "endDate" formatString="DD/MM/YYYY">
+		
+		
+		</mx:DateField>	
+	</mx:FormItem>
+	<mx:FormItem label="Investigations">
+		<mx:TextArea id="results"/>
+	</mx:FormItem>
+	<mx:FormItem label="Total Amount">
+		<mx:TextInput id="amountPaid" change="onAmountChanged()"/>
+	</mx:FormItem>
+	<mx:FormItem label = "Amount Paid">
+		<mx:TextInput id="paidCurrent" change="calcBalance()"/>
+	</mx:FormItem>
+	
+	<mx:FormItem label = "Balance">
+		<mx:Label id="bal" text="0"/>
+	</mx:FormItem>
+	<mx:FormItem label = "Pay Type" height="0" visible="false">
+		<mx:ComboBox id="paymentType" change="onChangePayment()" height="0" visible="false">
+			<mx:dataProvider>
+				<mx:Array>
+					<mx:Object label="Regular"/>
+					<mx:Object label= "Custom"/>
+				</mx:Array>
+			</mx:dataProvider>
+		</mx:ComboBox>
+	</mx:FormItem>
+	<mx:FormItem label = "Paid Status" >
+			<mx:ComboBox id="paid" change = "onPaidChange()" >
+				<mx:dataProvider>
+					<mx:Array>
+						<mx:Object label="Y"/>
+						<mx:Object label = "N"/>
+					</mx:Array>
+				</mx:dataProvider>
+			</mx:ComboBox>
+		</mx:FormItem>
+		
+	
+	<mx:Button id = "submitBtn" label="submit" click="submit()"/>	
+	
+</mx:TitleWindow>

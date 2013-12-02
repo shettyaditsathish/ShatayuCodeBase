@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width = "700" height="500" 
+	horizontalAlign="center" showCloseButton="true" close="{PopUpManager.removePopUp(this)}">
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			import mx.core.Application;
+			import mx.controls.Alert;
+			
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.event.ShatayuEvent;
+			import mx.collections.ArrayCollection;
+			import mx.utils.StringUtil;
+			import com.shatayu.model.Patient;
+			
+			
+			[Bindable] 
+			public var arr:ArrayCollection;
+			
+			public var parentObj:Object;
+			
+			public function onChange():void{
+				if(dg.selectedItem == null)return;
+				
+				Object(parentObj).patient = dg.selectedItem as Patient;
+				PopUpManager.removePopUp(this);
+				
+			}
+			
+			public function set isSearch(value:Boolean):void{
+				//searchBox.visible = value;
+				//searchBox.enabled = value;
+			}
+			
+			private function search():void{
+				var cond:String = "";
+				var name:String = "";
+				var check:Boolean = false;
+				if(StringUtil.trim(firstName.text).length > 0) {
+					cond = "firstName";
+					name = StringUtil.trim(firstName.text);
+					check = !check;
+					
+				}
+				if(StringUtil.trim(secondName.text).length > 0) {
+					cond = "lastName";
+					name = StringUtil.trim(secondName.text);
+					check = !check;
+					
+				}
+				
+				
+				if(!check){
+					Alert.show("Please specify either first or last name not both");
+					return;
+				}
+				
+				if(cond == ""){
+					Alert.show("Please specify either first or last name");
+					return;
+				}
+				
+				var mp:Object = new Object();
+				mp["searchValue"] = name;
+				mp["cond"] = cond;
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.LIST_PATIENT_BY_CRITERIA_COMMAND,mp,onDataLoad);
+			 	event.dispatch();
+				
+				
+			}
+			
+			public function onDataLoad(obj:Object):void{
+				arr = obj as ArrayCollection;
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:VBox id ="searchBox">
+		<mx:FormItem label="First Name">
+			<mx:TextInput id="firstName"/>
+		</mx:FormItem>
+		<mx:FormItem label="Last Name">
+			<mx:TextInput id="secondName"/>
+		</mx:FormItem>
+		<mx:Button label="search" click = "search()" styleName="myButton"/>
+	</mx:VBox>	
+	
+	<mx:DataGrid  id= "dg" dataProvider="{arr}" doubleClick="onChange()"
+		doubleClickEnabled="true">
+		<mx:columns>
+			<mx:DataGridColumn headerText="First Name" dataField="firstName"/>
+			<mx:DataGridColumn headerText="Last Name" dataField="lastName"/>
+			<mx:DataGridColumn headerText="Age" dataField="age"/>
+			<mx:DataGridColumn headerText="Sex" dataField="sex"/>
+			
+		</mx:columns>
+	</mx:DataGrid>
+	
+</mx:TitleWindow>

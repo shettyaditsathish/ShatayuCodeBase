@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+	implements="com.shatayu.view.interfaces.IView"
+	creationComplete="onCreate()">
+<mx:Script>
+	<![CDATA[
+		import mx.collections.SortField;
+		import mx.collections.Sort;
+		import mx.controls.Alert;
+		import mx.managers.PopUpManager;
+		import com.shatayu.model.Patient;
+		import com.shatayu.controller.PatientMgmtControllerEvents;
+		import com.shatayu.event.ShatayuEvent;
+		import com.shatayu.event.ViewEvent;
+		import com.shatayu.view.controller.ViewController;
+		import com.shatayu.event.ViewDataHolder;
+		import mx.collections.ArrayCollection;
+		import com.shatayu.model.Panchkarma;
+		import com.shatayu.model.ModelLocatorImp;
+		import com.shatayu.model.PatientPanchkarma;
+		import com.shatayu.model.Treatment;
+		import mx.controls.dataGridClasses.DataGridColumn;
+		
+		private var isCreated:Boolean = false;
+		
+		private function onCreate():void{
+			startDate.selectedDate = getStartDate();
+			endDate.selectedDate = getEndDate();
+			var condData:Object = new Object();
+			condData["startDate"] = getStartDate();
+			condData["endDate"] = getEndDate();
+			var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.LIST_TREATMENTS_BY_DATE_COMMAND,condData);
+			event.dispatch();
+			isCreated = true;
+		}
+		
+		private function getStartDate():Date{
+			if(isCreated){
+				return startDate.selectedDate;
+			}else{
+				var currDate:Date = new Date();
+				var startDateObj:Date = new Date();
+				startDateObj.date = 1;
+				startDateObj.month = currDate.month
+				return startDateObj;
+			}
+				
+		}
+		
+		private function getEndDate():Date{
+			if(isCreated){
+				return endDate.selectedDate;
+			}else{
+				var currDate:Date = new Date();
+				var endDateObj:Date = new Date();
+				endDateObj.date = 1;
+				endDateObj.month = currDate.month +1
+				endDateObj.date = endDateObj.date - 1;
+				return endDateObj;
+			}
+		}
+		
+		public function set viewData(obj:Object):void{
+			
+			if(obj == null){
+				if(startDate == null) return;
+				//startDate.selectedDate = null;
+				//endDate.selectedDate = null;
+				//treatmentAmount.text = "";
+				//panchkarmaAmount.text = "";
+				treatmentGrid.dataProvider = null;
+				panchkarmaGrid.dataProvider = null;
+				if(!isCreated){
+					return;
+				}
+				var condData:Object = new Object();
+				condData["startDate"] = getStartDate();
+				condData["endDate"] = getEndDate();
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.LIST_TREATMENTS_BY_DATE_COMMAND,condData);
+				event.dispatch();
+				return;
+			}
+			var result:Object = obj as Object;
+			trace("TC "+result["treatmentCost"]);
+			trace("ptc "+ result["panchkarmaTreatmentCost"]);
+			 
+		 	
+			var treatmentList:ArrayCollection = result["treatmentList"] as ArrayCollection;
+			var panchList:ArrayCollection =  result["patientPanchkarmaList"] as ArrayCollection;
+			treatmentGrid.dataProvider = treatmentList;
+		 	panchkarmaGrid.dataProvider = panchList;
+			if(treatmentList != null){
+				var sort:Sort = new Sort();
+				var sortField:SortField = new SortField("treatmnetDate", true , false);
+				sortField.compareFunction = sortDateForTreatment;
+			    sort.fields = [sortField];
+			    treatmentList.sort = sort;
+			    treatmentList.refresh();	
+			}
+			
+			if(panchList != null){
+				var sort:Sort = new Sort();
+				var sortField:SortField = new SortField("startDate", true , false);
+				sortField.compareFunction = sortDateForPanch;
+			    sort.fields = [sortField];
+			    panchList.sort = sort;
+			    panchList.refresh();	
+			}
+		}
+		
+		private function sortDateForTreatment(obj1:Object, obj2:Object):int{
+		  var d1:Number = (new Date(Date.parse(obj1.treatmnetDate))).getTime();
+		  var d2:Number = (new Date(Date.parse(obj2.treatmnetDate))).getTime();
+		  if(d1 < d2) {
+		    return -1;
+		  } else if(d1 == d2) {
+		    return 0;
+		  }
+		  return 1;
+		}
+		
+		private function sortDateForPanch(obj1:Object, obj2:Object):int{
+		  var d1:Number = (new Date(Date.parse(obj1.startDate))).getTime();
+		  var d2:Number = (new Date(Date.parse(obj2.startDate))).getTime();
+		  if(d1 < d2) {
+		    return -1;
+		  } else if(d1 == d2) {
+		    return 0;
+		  }
+		  return 1;
+		}
+		
+		public function get viewData():Object{
+			return null;
+		}
+		
+		public function patientLabelFunc(item:Object,column:DataGridColumn):String {
+			if(item is Treatment){
+				if( Treatment(item).patient == null)return "";
+				trace("item  "+item );
+				trace("treatmentId  "+Treatment(item).treatmentId );
+				trace("Treatment(item).patient  "+Treatment(item).patient );
+				trace("column  "+column );
+				trace("column.dataField  "+column.dataField );
+				return Treatment(item).patient[column.dataField];
+			}else  if(item is PatientPanchkarma){
+				if( PatientPanchkarma(item).patient == null)return "";
+            	return PatientPanchkarma(item).patient[column.dataField];
+   			}
+   			
+   			return "";
+        }	
+        
+        
+        private function getDateInFormate(dt:Date):String{
+        	 return dt.getDate() + "-"+(dt.getMonth() + 1)+"-"+dt.getFullYear();
+        }
+        
+        public function dateLabelFunc(item:Object,column:DataGridColumn):String {
+            return getDateInFormate(item[column.dataField]);
+        }	
+        
+         public function panchNameFunc(item:Object,column:DataGridColumn):String {
+            var panchkarmaList:ArrayCollection =  ModelLocatorImp.getInstance().panchkarmaList;
+	        	for(var i:int =0;i<panchkarmaList.length;i++){
+	        		if(Panchkarma(panchkarmaList.getItemAt(i)).panchkarmaId == item.panchkarmaId){
+	        			return Panchkarma(panchkarmaList.getItemAt(i)).panchkarmaName;
+	        		}
+	        	}
+	            
+	            return "";
+        }	
+        
+        public function onChange(event:Event):void{
+			if(event.currentTarget.selectedItem == null)return;
+			var p:Patient = event.currentTarget.selectedItem.patient as Patient;
+			var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+			viewDataHolder.viewType = ViewController.ADD_PATIENT_VIEW;
+			viewDataHolder.viewData = p;
+			ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			
+		}
+		
+		private function onSubmit():void{
+			var condData:Object = new Object();
+			condData["startDate"] = startDate.selectedDate;
+			condData["endDate"] = endDate.selectedDate;
+			var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.LIST_TREATMENTS_BY_DATE_COMMAND,condData);
+			event.dispatch();
+		}
+		
+		private function calculate():void{
+			var reaultMap:Object = new Object();
+			
+			var regularTreatmentCount:Number = 0 ;
+			var newTreatmentCount:Number = 0 ;
+			var customTreatmentList:ArrayCollection = new ArrayCollection();
+			var panchTrmtCustom:ArrayCollection = new ArrayCollection();
+			var regularPP:ArrayCollection = new ArrayCollection();
+			var uniqueNonCustomPanchTreatment:ArrayCollection = new ArrayCollection();
+			
+			for(var i:int = 0;i < ArrayCollection(treatmentGrid.dataProvider).length;i++){
+				var treatment:Treatment = ArrayCollection(treatmentGrid.dataProvider).getItemAt(i) as Treatment;
+				if(treatment.paymentType == "Regular"){
+					regularTreatmentCount++;
+				}else if(treatment.paymentType == "New"){
+					newTreatmentCount++
+				}
+					var mp:Object = new Object();
+					mp["treatmentDate"] = getDateInFormate(treatment.treatmnetDate);
+					mp["name"] = treatment.patient.firstName + " " + treatment.patient.lastName;
+					mp["amountPaid"] = treatment.amountPaid;
+					customTreatmentList.addItem(mp);
+				
+			}
+			
+			var uniqueNCPanchkarmaArray:ArrayCollection = new ArrayCollection();
+			
+			for(var j:int = 0;j < ArrayCollection(panchkarmaGrid.dataProvider).length;j++){
+				var pp:PatientPanchkarma = ArrayCollection(panchkarmaGrid.dataProvider).getItemAt(j) as PatientPanchkarma;
+				if(pp.paymentType == "Regular"){
+					regularPP.addItem(pp);
+					if(!uniqueNCPanchkarmaArray.contains(pp.panchkarmaId))
+						uniqueNCPanchkarmaArray.addItem(pp.panchkarmaId);
+					
+				}
+					var mpPP:Object = new Object();
+					mpPP["startDate"] = getDateInFormate(pp.startDate);
+					mpPP["endDate"] = getDateInFormate(pp.endDate);
+					mpPP["panchkarmaId"] = pp.panchkarmaId;
+					mpPP["name"] = pp.patient.firstName + " " + pp.patient.lastName;
+					mpPP["amountPaid"] = pp.amountPaid;
+					panchTrmtCustom.addItem(mpPP);
+				
+			}
+			
+			for(var n:int =0; n<uniqueNCPanchkarmaArray.length;n++){
+				var mapObj:Object = new Object();
+				mapObj["panchkarmaId"] = uniqueNCPanchkarmaArray[n];
+				uniqueNonCustomPanchTreatment.addItem(mapObj);
+			}
+			
+			reaultMap["regularTreatmentCount"] = regularTreatmentCount;
+			reaultMap["newTreatmentCount"] = newTreatmentCount;
+			reaultMap["customTreatmentList"] = customTreatmentList;
+			reaultMap["panchTrmtCustom"] = panchTrmtCustom;
+			reaultMap["regulatPanchTrmt"] = regularPP;
+			reaultMap["uniqueNonCustomPanchTreatment"] = uniqueNonCustomPanchTreatment;
+			var popup:TreatmentCalculationWindow = PopUpManager.createPopUp(this,TreatmentCalculationWindow) as TreatmentCalculationWindow;
+			popup.inputdataObj = reaultMap;
+		}
+        
+      
+	]]>
+</mx:Script>
+<mx:Spacer height = "10"/>
+	<mx:HBox>
+		<mx:FormItem label="Start Date" fontWeight="bold">
+			<mx:DateField id = "startDate" formatString="DD/MM/YYYY"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label="End Date" fontWeight="bold">
+			<mx:DateField id = "endDate" formatString="DD/MM/YYYY"/>
+		</mx:FormItem>	
+	</mx:HBox>
+	<mx:Button id= "submitBtn" label = "Submit" click="onSubmit()" styleName="myButton"/>
+	
+	
+	<mx:Button label = "Click to calculate" click="calculate()" styleName="myButton"/>
+	
+	<mx:VDividedBox width="100%" height="100%">
+		<mx:VBox  width="100%" height="50%" >
+			<mx:Label text="Treatment List" fontSize="12" fontWeight="bold"/>
+			<mx:DataGrid id = "treatmentGrid" doubleClickEnabled="true" doubleClick="onChange(event)"  height="100%" width="95%">
+				<mx:columns>
+					<mx:DataGridColumn headerText="Treatment Date" dataField="treatmnetDate" labelFunction="dateLabelFunc"/>
+					<mx:DataGridColumn headerText="First Name" dataField="firstName" labelFunction="patientLabelFunc"/>
+					<mx:DataGridColumn headerText="Last Name" dataField="lastName" labelFunction="patientLabelFunc"/>
+					<mx:DataGridColumn headerText="Mobile No" dataField="mobile1" labelFunction="patientLabelFunc"/>
+					<mx:DataGridColumn headerText="Landline" dataField="landline" labelFunction="patientLabelFunc"/>
+					<mx:DataGridColumn dataField = "paid" headerText="Paid" 
+						itemRenderer="com.shatayu.view.patientView.ImageRenderer" width="40">
+						
+					</mx:DataGridColumn>
+					<mx:DataGridColumn headerText="Payment type" dataField="paymentType"/>
+				</mx:columns>
+				
+			</mx:DataGrid>
+		</mx:VBox>
+		<mx:VBox width="100%" height="50%" >
+			<mx:Label text="Panchkarma Treatment List" fontSize="12" fontWeight="bold"/>
+	
+			<mx:DataGrid id = "panchkarmaGrid" doubleClickEnabled="true" doubleClick="onChange(event)" height="100%" width = "95%">
+				<mx:columns>
+					<mx:DataGridColumn headerText="Start Date" dataField="startDate" labelFunction="dateLabelFunc"/>
+					<mx:DataGridColumn headerText="End Date" dataField="endDate" labelFunction="dateLabelFunc"/>
+					<mx:DataGridColumn headerText="Panchkarma Name" labelFunction="panchNameFunc"/>
+					<mx:DataGridColumn headerText="First Name" dataField="firstName" labelFunction="patientLabelFunc"/>
+					<mx:DataGridColumn headerText="Last Name" dataField="lastName" labelFunction="patientLabelFunc"/>
+					<mx:DataGridColumn headerText="Mobile No" dataField="mobile1" labelFunction="patientLabelFunc"/>
+					<mx:DataGridColumn headerText="Landline" dataField="landline" labelFunction="patientLabelFunc"/>
+					<mx:DataGridColumn dataField = "paid" headerText="Paid" 
+						itemRenderer="com.shatayu.view.patientView.ImageRenderer" width="40">
+					</mx:DataGridColumn>
+					<mx:DataGridColumn headerText="Amount Paid" dataField="amountPaid"/>
+				</mx:columns>
+				
+			</mx:DataGrid>
+		</mx:VBox>
+	</mx:VDividedBox>
+	
+	
+	
+	
+</mx:VBox>

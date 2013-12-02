@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:util="com.shatayu.util.*"
+	width="100%" height="100%"
+	implements="com.shatayu.view.interfaces.IView" creationComplete="onCreationComplete()" 
+	show="onCreationComplete()" initialize="onInitialize()" horizontalAlign="center">
+	<mx:Style>
+		.myHeader{
+			font-size:15;
+			color:#FFFFFF;
+			fillColors: black, black;
+            fillAlphas: 1.0, 1.0;
+            header-height : 25;
+            highlightAlphas: 0.5, 0.13;
+            text-roll-over-color:#FFFFFF;
+            text-selected-color:#0000cc;
+            selectedFillColors: black, black;
+		}
+		
+	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.model.TreatmentDrug;
+			import mx.utils.StringUtil;
+			import mx.events.ListEvent;
+			import mx.controls.Alert;
+			import mx.core.Application;
+			import mx.events.CloseEvent;
+			import com.shatayu.model.PatientPanchkarma;
+			import mx.collections.SortField;
+			import mx.collections.Sort;
+			import com.shatayu.event.ShatayuEvent;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import mx.binding.utils.BindingUtils;
+			import com.shatayu.model.Panchkarma;
+			import com.shatayu.model.ModelLocatorImp;
+			import com.shatayu.model.Treatment;
+			import mx.collections.ArrayCollection;
+			import com.shatayu.model.Patient;
+			import mx.controls.DateField;
+			import mx.managers.PopUpManager;
+			
+			public var patientData:Patient = new Patient();
+			
+			[Bindable]
+			public var arrColl:ArrayCollection;
+			
+			[Bindable]
+			public var pancharrColl:ArrayCollection;
+			
+			[Bindable]
+			public var sexData:ArrayCollection;
+			
+			
+			
+			private var addTreatmentPopup:AddTreatment;
+			
+			private function onInitialize():void{
+				sexData = new ArrayCollection(
+                [ {label:"M"}, 
+                  {label:"F"}, 
+                  ]);
+			}
+			
+			public function onCreationComplete():void{
+				if(firstName == null)return;
+				firstName.text = patientData.firstName ;
+				middleName.text = patientData.middleName;
+				lastName.text = patientData.lastName;
+				if(patientData.initialDate == null){
+					initialDate.selectedDate = new Date();
+				}else
+					initialDate.selectedDate = patientData.initialDate;
+				age.text= isNaN(patientData.age)? "":patientData.age+"";
+				
+				if(patientData.sex == "M"){
+					sex.selectedIndex = 0;
+					
+				}else{
+					sex.selectedIndex = 1;
+				}
+				sex.dispatchEvent(new ListEvent(ListEvent.CHANGE));
+				
+				//sex.text = patientData.sex;
+				landline.text = patientData.landline;
+				mobile1.text = patientData.mobile1;
+				history.text = patientData.history;
+				knownCases.text = patientData.knownCases;
+				address.text = patientData.address;
+				trace("Binding executed   ");
+				BindingUtils.bindProperty(patientData,"firstName",firstName,"text");
+				BindingUtils.bindProperty(patientData,"middleName",middleName,"text");
+				BindingUtils.bindProperty(patientData,"lastName",lastName,"text");
+				BindingUtils.bindProperty(patientData,"initialDate",initialDate,"selectedDate");
+				BindingUtils.bindProperty(patientData,"age",age,"text");
+				//BindingUtils.bindProperty(patientData,"sex",sex.selectedItem,"label");
+				BindingUtils.bindProperty(patientData,"address",address,"text");
+				BindingUtils.bindProperty(patientData,"landline",landline,"text");
+				BindingUtils.bindProperty(patientData,"mobile1",mobile1,"text");
+				BindingUtils.bindProperty(patientData,"history",history,"text");
+				BindingUtils.bindProperty(patientData,"knownCases",knownCases,"text");				
+			}
+			
+			private function showPanchTreatmentDetails():void{
+				if(patientData.firstName == null || (patientData.firstName != null &&
+														StringUtil.trim(patientData.firstName).length == 0) ){
+					Alert.show("Patient's first name is minimum requirement to open the Panchkarma window");
+					return;											
+				}
+				var popuP:AddPanchTreatment = PopUpManager.createPopUp(this,AddPanchTreatment) as AddPanchTreatment;
+				popuP.parentObj = this;
+			}
+			
+			private function editPanchTreatmentDetails():void{
+				if(dgPanchkarma.selectedItem == null)return
+				var popuP:AddPanchTreatment = PopUpManager.createPopUp(this,AddPanchTreatment) as AddPanchTreatment;
+				popuP.parentObj = this;
+				popuP.loadDataObj = dgPanchkarma.selectedItem;
+			}
+			
+			
+			private function editTreatmentDetails():void{
+				if(dg.selectedItem == null)return
+				addTreatmentPopup = PopUpManager.createPopUp(this,AddTreatment) as AddTreatment;
+				addTreatmentPopup.parentObj = this;
+				addTreatmentPopup.loadDataObj = dg.selectedItem;
+			}
+			
+			private function deleteTreatment():void{
+				if(dg.selectedItem == null)return
+				Alert.show("Are you sure you want to delete Treatment?", "", 3, Sprite(Application.application), deleteTreatmentConfirm);
+				
+			}
+			
+			private function deleteTreatmentConfirm(event:CloseEvent):void {
+	            if (event.detail==Alert.YES){
+	               var evtObj:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.DELETE_TREATMENT_COMMAND,Treatment(dg.selectedItem));
+			 		evtObj.dispatch();
+	            }
+	        }
+			
+			private function deletePanchTreatment():void{
+				if(dgPanchkarma.selectedItem == null)return
+				Alert.show("Are you sure you want to delete Panchkarma Treatment?", "", 3, Sprite(Application.application), deletePanchTreatmentConfirm);
+				
+			}
+			
+			private function deletePanchTreatmentConfirm(event:CloseEvent):void {
+	            if (event.detail==Alert.YES){
+	               var evtObj:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.DELETE_PATIENT_PANCHKARMA_COMMAND,PatientPanchkarma(dgPanchkarma.selectedItem));
+			 		evtObj.dispatch();
+	            }
+	        }
+			
+			
+			
+			private function showTreatmentDetails():void{
+				if(patientData.firstName == null || (patientData.firstName != null &&
+														StringUtil.trim(patientData.firstName).length == 0) ){
+					Alert.show("Patient's first name is minimum requirement to open the Treatment window");
+					return;											
+				}
+				addTreatmentPopup = PopUpManager.createPopUp(this,AddTreatment) as AddTreatment;
+				addTreatmentPopup.parentObj = this;
+			}
+			
+			
+			
+	        
+	        private function getDateInFormate(dt:Date):String{
+	        	 return dt.getDate() + "-"+(dt.getMonth() + 1)+"-"+dt.getFullYear();
+	        }
+	        
+	        public function dateLabelFunc(item:Object,column:DataGridColumn):String {
+	            return getDateInFormate(item[column.dataField]);
+	        }	
+	        
+	        public function resultLabelFunction(item:Object,column:DataGridColumn):String {
+	            return (StringUtil.trim((item[column.dataField] as String)).length > 0 ? "Y" :"N");
+	        }
+	       
+	        
+	        public function panchKarmaNameLabelFunc(item:Object,column:DataGridColumn):String {
+	        	
+	        	var panchkarmaList:ArrayCollection =  ModelLocatorImp.getInstance().panchkarmaList;
+	        	for(var i:int =0;i<panchkarmaList.length;i++){
+	        		if(Panchkarma(panchkarmaList.getItemAt(i)).panchkarmaId == item.panchkarmaId){
+	        			return Panchkarma(panchkarmaList.getItemAt(i)).panchkarmaName;
+	        		}
+	        	}
+	            
+	            return "";
+	        }
+	        
+	       
+	        
+	        public function set viewData(obj:Object):void{
+	        	try{
+		        	if(obj != null && obj["command"] != null){
+		        		processCommands(String(obj["command"]),obj["commandData"])
+		        		return ;
+		        	}
+	        	}catch(e:Error){
+	        		
+	        	}
+	        	patientData = new Patient();
+	        	arrColl = new ArrayCollection();
+	        	pancharrColl = new ArrayCollection();
+	        	if(obj == null) {
+	        		if(firstName == null)return;
+	        		firstName.text = "" ;
+					middleName.text = "";
+					lastName.text = "";
+					initialDate.selectedDate = new Date();
+					age.text= "";
+					sex.selectedIndex = 0;
+					sex.dispatchEvent(new ListEvent(ListEvent.CHANGE));
+					landline.text = "";
+					mobile1.text = "";
+					history.text = "";
+					knownCases.text = "";
+					address.text = "";
+					onCreationComplete();
+					return;
+	        	}
+				patientData.patientId = Patient(obj).patientId;
+				patientData.firstName = Patient(obj).firstName;
+				patientData.lastName = Patient(obj).lastName;
+				patientData.middleName = Patient(obj).middleName;
+				patientData.age = Patient(obj).age;
+				patientData.sex = Patient(obj).sex;
+				patientData.initialDate = Patient(obj).initialDate;
+				patientData.mobile1 = Patient(obj).mobile1;
+				patientData.mobile2 = Patient(obj).mobile2;
+				patientData.landline = Patient(obj).landline;
+				patientData.knownCases = Patient(obj).knownCases;
+				patientData.history = Patient(obj).history;
+				patientData.treatment = Patient(obj).treatment;
+				patientData.address = Patient(obj).address;
+				patientData.panchkarmaTreatment = Patient(obj).panchkarmaTreatment;
+				
+				arrColl =  patientData.treatment;
+				if(arrColl != null){
+					var sort:Sort = new Sort();
+					var sortField:SortField = new SortField("treatmnetDate", true , false);
+					sortField.compareFunction = sortDate;
+				    sort.fields = [sortField];
+				    arrColl.sort = sort;
+				    arrColl.refresh();	
+				}
+				
+				//trace("treatment  "+arrColl.length);
+				//trace("treatment object "+arrColl.getItemAt(0));
+				pancharrColl = patientData.panchkarmaTreatment;
+				
+				
+				//address to be added
+				
+				
+				onCreationComplete();
+			}
+			
+			public function get viewData():Object{
+				return patientData;
+			}
+			
+			private function processCommands(commandStr:String,commandData:Object):void{
+	        	switch(commandStr){
+					case "deleteTreatment":
+						var treatmt:Treatment = commandData as Treatment;
+						arrColl.removeItemAt(arrColl.getItemIndex(treatmt));
+						break;
+					case "deletePatientPanchkarma":
+						var patientPanchkarma:PatientPanchkarma = commandData as PatientPanchkarma;
+						pancharrColl.removeItemAt(pancharrColl.getItemIndex(patientPanchkarma));
+						break;
+					case "deleteTreatmentDrug":
+						var trDrug:TreatmentDrug = commandData as TreatmentDrug;
+						addTreatmentPopup.removeTreatmentDrug(trDrug);
+						break;
+					default:
+						break;
+				}
+	        }
+			
+			private function submit():void{
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.ADD_PATIENT_COMMAND,patientData);
+			 	event.dispatch();
+			}
+			
+			private function onChange():void{
+				trace(" sex.selectedItem.label "+sex.selectedItem.label + "sex.selectedItem.label"+sex.selectedLabel)
+				patientData.sex =sex.selectedItem.label;
+			}
+			
+			private function showPanchKarmaTable():void{
+				/*if(!panchPat.visible){
+					panchPat.visible = true;
+					panchShow.label = "Hide Panchkarma Details"; 
+					panchPat.height = 200;
+				}else{
+					panchPat.visible =  false;
+					panchShow.label = "Show Panchkarma Details"; 
+					panchPat.height = 0;
+				}*/
+			}
+			
+			private function sortDate(obj1:Object, obj2:Object):int{
+			  var d1:Number = (new Date(Date.parse(obj1.treatmnetDate))).getTime();
+			  var d2:Number = (new Date(Date.parse(obj2.treatmnetDate))).getTime();
+			  if(d1 < d2) {
+			    return 1;
+			  } else if(d1 == d2) {
+			    return 0;
+			  }
+			  return -1;
+			}
+			
+			private function onDgCreationCOmplete():void{
+				dg.columns[0].width = dg.width *0.10;
+				dg.columns[1].width = dg.width *0.40;
+				dg.columns[2].width = dg.width *0.30;
+				dg.columns[3].width = dg.width *0.10;
+				dg.columns[4].width = dg.width *0.10;
+			}
+			
+			private function onTreatmentColor(item:Object, rowIndex:int, 
+			     dataIndex:int, color:uint):uint
+			 {
+			   if(item.paid != "Y")
+			     return 0xFF0000;
+			   else
+			     return color;
+			 }
+		]]>
+	</mx:Script>	
+	<mx:HBox width = "100%">
+		<mx:FormItem label="First Name   " >
+			<mx:TextInput id= "firstName"/>
+		</mx:FormItem>
+		<mx:FormItem label="Middle Name   ">
+			<mx:TextInput id= "middleName"/>
+		</mx:FormItem>
+		<mx:FormItem label="Last Name   ">
+			<mx:TextInput id= "lastName"/>
+		</mx:FormItem>
+		
+	</mx:HBox>
+	<mx:HBox width = "100%">
+		<mx:FormItem label="Age    ">
+			<mx:TextInput id= "age"/>
+		</mx:FormItem>		
+		<mx:FormItem label="Sex">
+			<mx:ComboBox id = "sex" dataProvider="{sexData}" selectedIndex="-1" change="onChange()"/>
+		</mx:FormItem>
+		<mx:FormItem label="Date">
+			<mx:DateField id= "initialDate" formatString="DD/MM/YYYY"/>
+		</mx:FormItem>
+		<mx:FormItem label="Tel no ">
+			<mx:TextInput id= "landline" displayAsPassword="{(Application.application.lPanel.currentState == 'restrictedUserState')?true:false}"/>
+		</mx:FormItem>
+		<mx:FormItem label="Mobile">
+			<mx:TextInput id= "mobile1" displayAsPassword="{(Application.application.lPanel.currentState == 'restrictedUserState')?true:false}"/>
+		</mx:FormItem>
+	</mx:HBox>
+	
+	<mx:HBox width = "100%">
+		<mx:FormItem label="Address" width = "100%">
+			<mx:TextArea id= "address" width = "400" displayAsPassword="{(Application.application.lPanel.currentState == 'restrictedUserState')?true:false}"/>
+		</mx:FormItem>
+	</mx:HBox>	
+	<mx:HBox width = "100%">
+		<mx:FormItem label="H/o    ">
+			<mx:TextArea id= "history" width = "300"/>
+		</mx:FormItem>
+		<mx:FormItem label="K/C/O">
+			<mx:TextArea id= "knownCases" width = "300"/>
+		</mx:FormItem>
+	</mx:HBox>
+	
+	<mx:Accordion width="100%" height="70%" headerStyleName="myHeader" >
+		<mx:VBox label="Treatment" width="100%" height="100%" horizontalAlign="center" >
+			<mx:HBox width="100%" horizontalAlign="center" height="40" verticalAlign="middle">
+				<mx:Button label="Add Treatment Details" click="showTreatmentDetails()" styleName="myButton"/>
+				<mx:Button label="Edit Treatment Details" click="editTreatmentDetails()" styleName="myButton"/>
+				<mx:Button label="Delete Treatment" click="deleteTreatment()" styleName="myButton"/>
+				
+			</mx:HBox>
+			
+			<util:DataGridWithRowColor id = "dg" dataProvider="{arrColl}" variableRowHeight="true" width="98%" 
+				horizontalGridLines="false" horizontalGridLineColor="0x000000" doubleClickEnabled="true"
+				doubleClick="editTreatmentDetails()" creationComplete="onDgCreationCOmplete()" rowColorFunction="onTreatmentColor">
+				<util:columns>
+					<mx:DataGridColumn dataField  = "treatmnetDate" headerText="Date" 
+						labelFunction="dateLabelFunc" sortDescending="true" sortCompareFunction="sortDate">
+						
+					</mx:DataGridColumn>
+					<mx:DataGridColumn dataField = "signsSymptons" headerText="Signs and Symptoms"
+						wordWrap="true" >
+						
+					</mx:DataGridColumn>
+					<mx:DataGridColumn dataField = "rd"  headerText="Rx and Duration"  
+						itemRenderer="com.shatayu.view.patientView.SignSympDurationView"
+						>
+						
+					</mx:DataGridColumn >
+					<mx:DataGridColumn dataField = "tongue" headerText="Tongue" 
+						>
+						
+					</mx:DataGridColumn>
+					<mx:DataGridColumn dataField = "pulse" headerText="Pulse" 
+						>
+						
+					</mx:DataGridColumn>
+					<mx:DataGridColumn dataField = "results" headerText="I" 
+						labelFunction="resultLabelFunction" dataTipField="results" showDataTips="true">
+						
+					</mx:DataGridColumn>
+					<mx:DataGridColumn headerText="P" >
+						<mx:itemRenderer>
+							
+							<mx:Component>
+								
+								 <mx:HBox width="100%" height="100%" verticalAlign="middle">
+								  <mx:Script>
+								 	<![CDATA[
+								 		import mx.core.Application;
+								 		import mx.containers.TitleWindow;
+								 		import com.shatayu.model.Treatment;
+								 		import mx.managers.PopUpManager;
+								 		
+								 		private var treatment:Treatment;
+								 		private var tw:TreatmentPicWindow = new TreatmentPicWindow();
+								 		override public function set data(value:Object):void{
+											super.data = value;
+											if(value == null)
+												return;
+											treatment = value as Treatment;
+										}
+								 		
+								 		private function onClick():void{
+								 			tw.treatment =  treatment;
+								 			PopUpManager.addPopUp(tw,Application.application as DisplayObject);
+								 			PopUpManager.centerPopUp(tw);
+								 		}
+								 	]]>
+								 </mx:Script>
+								 	<mx:Image source="@Embed(source='/assets/cameraIcon.gif')" useHandCursor="true" click="onClick()" />
+								 </mx:HBox >
+							</mx:Component>
+						</mx:itemRenderer>
+					</mx:DataGridColumn>
+					
+				</util:columns>
+				
+			</util:DataGridWithRowColor>
+		</mx:VBox>
+		
+		
+		<mx:VBox id = "panchPat" label="Panchkarma Treatment" width="100%" height="100%" >
+			<mx:HBox width="100%" horizontalAlign="center">
+				<mx:Button label="Add Panchkarma Treatment" click="showPanchTreatmentDetails()" styleName="myButton"/>
+				<mx:Button label="Edit Panchkarma Treatment" click="editPanchTreatmentDetails()" styleName="myButton"/>
+				<mx:Button label="Delete Panchkarma Treatment" click="deletePanchTreatment()" styleName="myButton"/>
+			</mx:HBox>
+			
+			<mx:DataGrid id = "dgPanchkarma" dataProvider="{pancharrColl}" variableRowHeight="true" width="98%"
+				horizontalGridLineColor="0x000000" doubleClickEnabled="true"
+				doubleClick="editPanchTreatmentDetails()">
+				<mx:columns>
+					<mx:DataGridColumn dataField  = "panchkarmaName" headerText="Panchkarma Name" labelFunction="panchKarmaNameLabelFunc">
+						
+					</mx:DataGridColumn>
+					<mx:DataGridColumn dataField = "startDate" headerText="Start Date" labelFunction="dateLabelFunc" sortDescending="true">
+						
+					</mx:DataGridColumn>
+					<mx:DataGridColumn dataField = "endDate"  headerText="End date"
+						  labelFunction="dateLabelFunc">
+						
+					</mx:DataGridColumn >
+					<!--mx:DataGridColumn dataField = "results" headerText="Investigations" >
+						
+					</mx:DataGridColumn-->
+				</mx:columns>
+				
+			</mx:DataGrid>
+		</mx:VBox>
+	</mx:Accordion>
+	
+	
+	<mx:Button label="Save Patient Details" click="submit()" styleName="myButton"/>
+	
+	<mx:NumberValidator source="{age}" property="text" 
+       	integerError="Should contsin integers only"
+        />
+</mx:VBox>

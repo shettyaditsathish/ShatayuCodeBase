@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" width="600" height="500">
+	<mx:Script>
+		<![CDATA[
+			
+		]]>
+	</mx:Script>
+	<mx:Form>
+		<mx:FormItem label="Order Date">
+			<mx:DateField id="orderDate" selectedDate="{new Date()}" formatString="DD/MM/YYYY"/>
+		</mx:FormItem>
+		<mx:FormItem label="Order Number">
+			<mx:TextInput id= "orderNum"/>
+		</mx:FormItem>
+		<mx:FormItem label="Order Description">
+			<mx:TextInput id= "orderDescr"/>
+		</mx:FormItem>		
+		<mx:FormItem label="Company Name">
+			<mx:HBox>
+				<mx:ComboBox id= "companyName" />
+				<mx:LinkButton label="Company Name does not exist in list?" />
+			<mx:HBox>
+		</mx:FormItem>
+		<mx:FormItem label="Discount">
+			<mx:TextInput id= "discount"/>
+		</mx:FormItem>		
+		<mx:FormItem label="Total Cost">
+			<mx:HBox>
+				<mx:TextInput id= "totalCost"/>
+				<mx:CheckBox id="autoCalculate" label="Auto Calculate?">	
+			</mx:HBox>
+		</mx:FormItem>	
+	</mx:Form>
+	<mx:CheckBox label="Enter content" selected="true"/>
+	
+</mx:TitleWindow>

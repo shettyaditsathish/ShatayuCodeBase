@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<services:ServiceLocator xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:services = "com.adobe.cairngorm.business.*">
+	 <mx:RemoteObject
+    	id="patientMgmtDelegate"
+    	destination="PatientMgmtDelegate"
+		showBusyCursor="true"
+		endpoint="http://localhost:8080/clinicmgmt/messagebroker/amf"
+		result="event.token.resultHandler(event);"
+		fault="event.token.faultHandler(event);">
+    </mx:RemoteObject> 	
+    <mx:RemoteObject
+    	id="organiserDelegate"
+    	destination="OrganiserDelegate"
+		showBusyCursor="true"
+		endpoint="http://localhost:8080/clinicmgmt/messagebroker/amf"
+		result="event.token.resultHandler(event);"
+		fault="event.token.faultHandler(event);">
+    </mx:RemoteObject> 	
+    
+    <mx:RemoteObject
+    	id="chartDelegate"
+    	destination="ChartDelegate"
+		showBusyCursor="true"
+		endpoint="http://localhost:8080/clinicmgmt/messagebroker/amf"
+		result="event.token.resultHandler(event);"
+		fault="event.token.faultHandler(event);">
+    </mx:RemoteObject> 	
+</services:ServiceLocator>

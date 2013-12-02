@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" 
+	height="100%" implements="com.shatayu.view.interfaces.IView"
+	horizontalAlign="center">
+	 <mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import com.shatayu.event.ShatayuEvent;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import mx.core.Application;
+			import com.shatayu.model.Panchkarma;
+			import com.shatayu.model.ModelLocatorImp;
+			import com.shatayu.event.ViewEvent;
+			import com.shatayu.view.controller.ViewController;
+			import com.shatayu.event.ViewDataHolder;
+			import com.shatayu.model.Drug;
+			
+			public function set viewData(obj:Object):void{
+				if(obj != null && obj["command"] != null){
+	        		processCommands(String(obj["command"]),obj["commandData"])
+	        		return ;
+	        	}
+			}
+			public function get viewData():Object{
+				return null;
+			}
+			
+			private function onChange():void{
+				if(dg.selectedItem ==  null)return;
+				var panchkarma:Panchkarma = dg.selectedItem as Panchkarma;
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.ADD_PANCHKARMA_VIEW;
+				trace("Check panchkarma  "+panchkarma);
+				viewDataHolder.viewData = panchkarma;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			private function processCommands(commandStr:String,commandData:Object):void{
+	        	switch(commandStr){
+					case "deletePanchkarma":
+						var panchkrma:Panchkarma = commandData as Panchkarma;
+						ModelLocatorImp.getInstance().panchkarmaList.removeItemAt(ModelLocatorImp.getInstance().panchkarmaList.getItemIndex(panchkrma));
+						break;
+					default:
+						break;
+				}
+	        }
+			
+			private function deletePanchkarma():void{
+				if(dg.selectedItem == null)return
+				Alert.show("Are you sure you want to delete Panchkarma?", "", 3, Sprite(Application.application), deletePanchkarmaConfirm);
+				
+			}
+			
+			private function deletePanchkarmaConfirm(event:CloseEvent):void {
+	            if (event.detail==Alert.YES){
+	               var evtObj:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.DELETE_PANCHKARMA_COMMAND,Panchkarma(dg.selectedItem));
+			 		evtObj.dispatch();
+	            }
+	        }
+			
+		]]>
+	</mx:Script>
+	<mx:Spacer height = "100"/>
+	
+	<mx:Button label="Delete Panchkarma" click="deletePanchkarma()" styleName="myButton"/>
+	<mx:DataGrid  id= "dg" dataProvider="{ModelLocatorImp.getInstance().panchkarmaList}" doubleClick="onChange()"
+		doubleClickEnabled="true">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Name" dataField="panchkarmaName"/>
+			<mx:DataGridColumn headerText="Cost" dataField="cost"/>
+			<mx:DataGridColumn headerText="Procedure" dataField="procedure"/>
+			<mx:DataGridColumn headerText="Diseases" dataField="diseases"/>
+			<mx:DataGridColumn headerText="Details" dataField="details"/>
+			<mx:DataGridColumn headerText="No of Days" dataField="noOfDays"/>
+		</mx:columns>
+	</mx:DataGrid>
+</mx:VBox>

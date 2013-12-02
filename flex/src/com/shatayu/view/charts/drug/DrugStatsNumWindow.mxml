@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" width="800" height="600"
+	showCloseButton="true" close="{PopUpManager.removePopUp(this)}" title="Drug Stats In Numbers" >
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Button;
+			import mx.controls.Label;
+			import mx.containers.GridItem;
+			import mx.containers.GridRow;
+			import mx.containers.Grid;
+			import mx.containers.HBox;
+			import mx.collections.SortField;
+			import mx.collections.Sort;
+			import mx.controls.DataGrid;
+			import com.shatayu.model.Drug;
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.collections.ArrayCollection;
+			public var chartData:ArrayCollection;
+			public var drugList:ArrayCollection;
+			
+			override protected function createChildren():void{
+				super.createChildren();
+				var dataList:ArrayCollection = new ArrayCollection();
+			 	var dataChild:Object = chartData.getItemAt(0);
+			 	for each(var drug:Drug in drugList){
+			 		
+		 			var mp1:Object = new Object();
+		 			mp1["drugName"] = drug.drugName;
+		 			dataList.addItem(mp1);
+			 	}
+			 	
+			 	for each(var mp:Object in chartData){
+			 		//var hbox:HBox = new HBox();
+			 		var mainDatagrid:DataGrid = getMainDataGrid(dataList,mp);
+			 		//hbox.addChild(mainDatagrid);
+			 		//hbox.addChild(getTop5DataGrid(mainDatagrid.dataProvider as ArrayCollection,mp));
+			 		//hbox.addChild(getLast5DataGrid(mainDatagrid.dataProvider as ArrayCollection,mp));
+			 		var grid:Grid = getGridLayout(mp["month"] as String,mainDatagrid,getTop5DataGrid(mainDatagrid.dataProvider as ArrayCollection,mp),
+			 		getLast5DataGrid(mainDatagrid.dataProvider as ArrayCollection,mp));
+			 		addChild(grid);
+			 		
+			 	}
+			}
+			private function getGridLayout(header:String,mainGrid:DataGrid,top5Grid:DataGrid,last5grid:DataGrid):Grid{
+				var grid:Grid =  new Grid();
+				var gridRow1 = new GridRow();
+				
+				var lb:Label = new Label();
+				lb.text = header;
+				lb.setStyle("fontWeight","bold");
+				lb.setStyle("fontSize",14);
+				var grItem:GridItem = new GridItem();
+				grItem.addChild(lb);
+				gridRow1.addChild(grItem);
+				
+				var gridRow2 = new GridRow();
+				
+				var gridItem1:GridItem = new GridItem();
+				var gridItem2:GridItem = new GridItem();
+				var gridItem3:GridItem = new GridItem();
+				var lb1:Label = new Label();
+				lb1.text = "All";
+				lb1.setStyle("fontWeight","bold");
+				lb1.setStyle("fontSize",12);
+				
+				gridItem1.addChild(lb1);
+				gridItem1.addChild(mainGrid);
+				var lb2:Label = new Label();
+				lb2.text = "Top 5";
+				lb2.setStyle("fontWeight","bold");
+				lb2.setStyle("fontSize",12);
+				gridItem2.addChild(lb2);
+				gridItem2.addChild(top5Grid);
+				var lb3:Label = new Label();
+				lb3.text = "Last 5";
+				lb3.setStyle("fontWeight","bold");
+				lb3.setStyle("fontSize",12);
+				gridItem3.addChild(lb3);
+				gridItem3.addChild(last5grid);
+				
+				gridRow2.addChild(gridItem1);
+				gridRow2.addChild(gridItem2);
+				gridRow2.addChild(gridItem3);
+				
+				grid.addChild(gridRow1);
+				grid.addChild(gridRow2);
+				
+				return grid;
+			}
+			
+			
+			
+			private function getMainDataGrid(dataList:ArrayCollection,mp:Object):DataGrid{
+				var realDlist:ArrayCollection = new ArrayCollection(dataList.toArray());
+		 		var dataGrid:DataGrid = new DataGrid();
+		 		
+		 		var dataGridColumn1:DataGridColumn  = new DataGridColumn();
+		 		dataGridColumn1.dataField = "drugName";
+		 		dataGridColumn1.headerText = "Drug Name";
+		 		
+		 		var dataGridColumn2:DataGridColumn  = new DataGridColumn();
+		 		dataGridColumn2.dataField = mp["month"];
+		 		dataGridColumn2.headerText = mp["month"];
+		 		
+		 		var cols:Array = dataGrid.columns;
+		 		cols.push(dataGridColumn1);
+            	cols.push(dataGridColumn2);
+            	dataGrid.columns = cols;
+		 		
+		 		
+		 		for each(var dataObj:Object in realDlist){
+		 			dataObj[mp["month"]] = (isNaN(parseInt( mp[dataObj["drugName"]] ))?0:parseInt( mp[dataObj["drugName"]] ));
+		 		}
+		 		var sort:Sort = new Sort();
+				var sortField:SortField = new SortField(mp["month"], true , true);
+				//sortField.compareFunction = sortDateDetails;
+				sortField.numeric = true;
+				sort.fields = [sortField];
+				realDlist.sort = sort;
+				realDlist.refresh();	
+		 		
+		 		dataGrid.dataProvider = realDlist;
+		 		return dataGrid;
+			}
+			
+			private function getTop5DataGrid(dataList:ArrayCollection,mp:Object):DataGrid{
+				var top5List:ArrayCollection = new ArrayCollection();
+		 		for(var i:int = 0 ;i< 5;i++){
+		 			top5List.addItem(dataList.getItemAt(i));
+		 		}
+		 		
+		 		var dataGridTop5:DataGrid = new DataGrid();
+		 		
+		 		var dataGridColumnTop51:DataGridColumn  = new DataGridColumn();
+		 		dataGridColumnTop51.dataField = "drugName";
+		 		dataGridColumnTop51.headerText = "Drug Name";
+		 		
+		 		var dataGridColumnTop52:DataGridColumn  = new DataGridColumn();
+		 		dataGridColumnTop52.dataField = mp["month"];
+		 		dataGridColumnTop52.headerText = mp["month"];
+		 		
+		 		var colsTop5:Array = dataGridTop5.columns;
+		 		colsTop5.push(dataGridColumnTop51);
+            	colsTop5.push(dataGridColumnTop52);
+            	dataGridTop5.columns = colsTop5;
+		 		
+		 		
+		 		for each(var dataObj:Object in top5List){
+		 			dataObj[mp["month"]] = (isNaN(parseInt( mp[dataObj["drugName"]] ))?0:parseInt( mp[dataObj["drugName"]] ));
+		 		}
+		 		var sort:Sort = new Sort();
+				var sortField:SortField = new SortField(mp["month"], true , true);
+				//sortField.compareFunction = sortDateDetails;
+				sortField.numeric = true;
+				sort.fields = [sortField];
+				top5List.sort = sort;
+				top5List.refresh();	
+		 		
+		 		dataGridTop5.dataProvider = top5List;
+		 		return dataGridTop5;
+			}
+			
+			private function getLast5DataGrid(dataList:ArrayCollection,mp:Object):DataGrid{
+				var last5List:ArrayCollection = new ArrayCollection();
+		 		for(var i:int = (dataList.length - 1),counter = 0  ;(i > 0 && counter < 5);i--){
+		 			if(dataList.getItemAt(i)[mp["month"]] > 0){
+		 				last5List.addItem(dataList.getItemAt(i));
+		 				counter++;
+		 			}	
+		 		}
+		 		
+		 		var dataGridLast5:DataGrid = new DataGrid();
+		 		
+		 		var dataGridColumnLast51:DataGridColumn  = new DataGridColumn();
+		 		dataGridColumnLast51.dataField = "drugName";
+		 		dataGridColumnLast51.headerText = "Drug Name";
+		 		
+		 		var dataGridColumnLast52:DataGridColumn  = new DataGridColumn();
+		 		dataGridColumnLast52.dataField = mp["month"];
+		 		dataGridColumnLast52.headerText = mp["month"];
+		 		
+		 		var colsLast5:Array = dataGridLast5.columns;
+		 		colsLast5.push(dataGridColumnLast51);
+            	colsLast5.push(dataGridColumnLast52);
+            	dataGridLast5.columns = colsLast5;
+		 		
+		 		
+		 		for each(var dataObj:Object in last5List){
+		 			dataObj[mp["month"]] = (isNaN(parseInt( mp[dataObj["drugName"]] ))?0:parseInt( mp[dataObj["drugName"]] ));
+		 		}
+		 		var sort:Sort = new Sort();
+				var sortField:SortField = new SortField(mp["month"], true , true);
+				//sortField.compareFunction = sortDateDetails;
+				sortField.numeric = true;
+				sort.fields = [sortField];
+				last5List.sort = sort;
+				last5List.refresh();	
+		 		
+		 		dataGridLast5.dataProvider = last5List;
+		 		return dataGridLast5;
+			}
+			
+			
+			
+		]]>
+	</mx:Script>
+	
+</mx:TitleWindow>

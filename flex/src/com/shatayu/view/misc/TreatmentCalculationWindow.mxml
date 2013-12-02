@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 	
+	width="950" height="500" creationComplete="onCreationComplete()" showCloseButton="true"
+	close="PopUpManager.removePopUp(this)" title="Calculate">
+	<mx:Style>
+		
+		
+		.myHeader{
+			font-size:15;
+			color:#FFFFFF;
+			fillColors: black, black;
+            fillAlphas: 1.0, 1.0;
+            header-height : 25;
+            highlightAlphas: 0.5, 0.13;
+            text-roll-over-color:#FFFFFF;
+            text-selected-color:#0000cc;
+            selectedFillColors: black, black;
+		}
+		
+	
+	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+			import mx.managers.PopUpManager;
+			import com.shatayu.model.Panchkarma;
+			import com.shatayu.model.ModelLocatorImp;
+			import mx.collections.ArrayCollection;
+			public var inputdataObj:Object;
+			
+			private var newTreatmentCount:Number;
+			private var regularTreatmentCount:Number;
+			private var regularPT:ArrayCollection;
+			
+			private function onCreationComplete():void{
+				regularTreatmentCount = inputdataObj["regularTreatmentCount"] as Number;
+				newTreatmentCount = inputdataObj["newTreatmentCount"] as Number;
+				regularPT = inputdataObj["regulatPanchTrmt"] as ArrayCollection;
+				treatment.dataProvider = inputdataObj["customTreatmentList"] as ArrayCollection;
+				ppCustom.dataProvider = inputdataObj["panchTrmtCustom"] as  ArrayCollection;
+				PopUpManager.centerPopUp(this);
+			}
+			
+			public function panchNameFunc(item:Object,column:DataGridColumn):String {
+            	var panchkarmaList:ArrayCollection =  ModelLocatorImp.getInstance().panchkarmaList;
+	        	for(var i:int =0;i<panchkarmaList.length;i++){
+	        		if(Panchkarma(panchkarmaList.getItemAt(i)).panchkarmaId == item.panchkarmaId){
+	        			return Panchkarma(panchkarmaList.getItemAt(i)).panchkarmaName;
+	        		}
+	        	}
+	            
+	            return "";
+        	}
+        	
+        	private function submit():void{
+        		var arr:ArrayCollection = new ArrayCollection();
+        		var regularTrAmount:Number=0;
+        		var newTrAmount:Number=0;
+	        	
+	        	var customTreatmentCount:Number = 0
+	        	for(var y:int = 0;y< ArrayCollection(treatment.dataProvider).length;y++){
+	        		if(isNaN(ArrayCollection(treatment.dataProvider)[y]["amountPaid"])) continue;
+        			customTreatmentCount = customTreatmentCount + parseFloat(ArrayCollection(treatment.dataProvider)[y]["amountPaid"]);
+	        	}
+	        	
+	        	var custTrMap:Object = new Object();
+        		custTrMap["subject"] = "Treatments";
+        		custTrMap["numberOf"] = ArrayCollection(treatment.dataProvider).length;
+        		custTrMap["amt"] = customTreatmentCount;
+        		arr.addItem(custTrMap);
+	        	
+	        	var ppMapList:Object = new Object();
+        		
+        		var panchkarmaCustomCost:Number = 0;
+        		for(var z:int = 0;z<ArrayCollection(ppCustom.dataProvider).length;z++){
+        			if(isNaN(ArrayCollection(ppCustom.dataProvider)[z]["amountPaid"])) continue;
+        			panchkarmaCustomCost = panchkarmaCustomCost + parseFloat(ArrayCollection(ppCustom.dataProvider)[z]["amountPaid"]);
+        		}
+        		
+        		var custPanchTrMap:Object = new Object();
+        		custPanchTrMap["subject"] = "Panchkarma Treatments";
+        		custPanchTrMap["numberOf"] = ArrayCollection(ppCustom.dataProvider).length;
+        		custPanchTrMap["amt"] = panchkarmaCustomCost;
+        		arr.addItem(custPanchTrMap);
+        		
+        		var totalPopup:Total = new Total();
+        		totalPopup.totalArr = arr;
+        		totalPopup.treatmentText = "Treatment total Nos: <b><u>"+(ArrayCollection(treatment.dataProvider).length) +"</u></b>   Treatment TotalCost: <b><u>"+(customTreatmentCount)+"</u></b>  New Treatments: <b><u>"+(newTreatmentCount)+"</u></b>";
+        		
+        		totalPopup.panchkarmaText = "Panchkarma total Nos: <b><u>"+(
+        		ArrayCollection(ppCustom.dataProvider).length) +"</u></b>  Panchkarma TotalCost: <b><u>"+(panchkarmaCustomCost)+"</u></b>";
+        		
+        		totalPopup.grandTotalText = "<b><u>" + ( customTreatmentCount + panchkarmaCustomCost)+"</u></b>";
+        		PopUpManager.addPopUp(totalPopup,this);
+        		PopUpManager.centerPopUp(totalPopup);
+        	}
+		]]>
+		
+	</mx:Script>
+	<mx:HBox creationPolicy="all" width="100%" height="70%" >
+		<mx:Panel title="Treatment" label="Treatments" width="43%" height="100%" paddingLeft="10"
+			paddingTop="10">
+			<!--mx:FormItem label="Amount For New treatments" >
+				<mx:TextInput id = "newTreatment" />
+			</mx:FormItem>
+			
+			<mx:FormItem label="Amount For Regular treatments">
+				<mx:TextInput id = "regularTreatment" />
+			</mx:FormItem-->
+			
+			<mx:Label text="Enter the amount for custom treatments " fontWeight="bold" fontSize="12"/>
+			
+			<mx:DataGrid id="treatment">
+				<mx:columns>
+					<mx:DataGridColumn dataField="treatmentDate" headerText="Treatment Date"/>
+					<mx:DataGridColumn headerText="Patient Name" dataField="name"/>
+					<mx:DataGridColumn headerText="Amount" dataField="amountPaid" textAlign="right"/>
+				</mx:columns>
+			</mx:DataGrid>
+		</mx:Panel>
+		<mx:Panel label="Panchkarma" width="57%" height="100%" title="Panchkarma" paddingLeft="10" paddingTop="10">
+			<!--mx:Label text="Enter the rates for the panchkarma " fontWeight="bold" fontSize="12"/>
+		
+			<mx:DataGrid id="panchkarma">
+				<mx:columns>
+					<mx:DataGridColumn labelFunction="panchNameFunc" headerText="Panchkarma Name"/>
+					<mx:DataGridColumn headerText="Amount" itemRenderer="com.shatayu.view.misc.AmountTextInput"/>
+				</mx:columns>
+			</mx:DataGrid>
+			
+			<mx:Label text="Enter the amount for custom panchkarma treatments " fontWeight="bold" fontSize="12"/-->
+			
+			<mx:DataGrid id="ppCustom">
+				<mx:columns>
+					<mx:DataGridColumn dataField="startDate" headerText="Start Date"/>
+					<mx:DataGridColumn dataField="endDate" headerText="End Date"/>
+					<mx:DataGridColumn headerText="Panchkarma Name" labelFunction="panchNameFunc"/>
+					<mx:DataGridColumn headerText="Patient Name" dataField="name"/>
+					<mx:DataGridColumn headerText="Amount" dataField="amountPaid" textAlign="right"/>
+				</mx:columns>
+			</mx:DataGrid>
+		</mx:Panel>
+	</mx:HBox>
+	<mx:HBox width="100%" horizontalAlign="center">
+		<mx:Button label = "Calculate " click="submit()" styleName="myButton"/>
+	</mx:HBox>
+	
+	
+</mx:TitleWindow>

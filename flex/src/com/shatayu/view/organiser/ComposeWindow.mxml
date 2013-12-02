@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" width="400" height="300"
+				showCloseButton="true" close="{PopUpManager.removePopUp(this)}">
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.event.ShatayuEvent;
+			import com.shatayu.model.Mail;
+			import mx.collections.ArrayCollection;
+			import mx.managers.PopUpManager;
+			
+			[Bindbale]
+			public var mail:Mail;
+			
+			public var emailProvider:String;
+			
+			private function onSend():void{
+				var arr:ArrayCollection = new ArrayCollection(toAddr.text.split(";"));
+				var mp:Object = {"emailProvider":emailProvider,"toAddress":arr,"subject":subject.text,"message":content.text};
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.EMAIL_SEND_COMMAND,mp,onSendMail);
+        		event.dispatch();
+			}
+			
+			public function onSendMail(obj:Object):void{
+				 PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+	<mx:Form>
+		<mx:FormItem label = "To:">
+			<mx:TextInput id = "toAddr" width = "250" text="{(mail != null)?mail.fromAddress:''}"/>
+		</mx:FormItem>
+		<mx:FormItem label = "Subject:">
+			<mx:TextInput id= "subject" width = "250" text="{(mail != null)?mail.subject:''}"/>
+		</mx:FormItem>
+		<mx:FormItem label = "Content:">
+			<mx:TextArea id = "content" width = "250" text="{(mail != null)?mail.mailContent:''}"/>
+		</mx:FormItem>
+	</mx:Form>
+	<mx:Button label ="Send" click = "onSend()"/>
+</mx:TitleWindow>

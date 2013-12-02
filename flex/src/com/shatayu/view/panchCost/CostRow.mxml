@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="onCreate()">
+	<mx:Metadata>
+		[Event(name="addCostRow", type="flash.events.Event",buble)]
+		[Event(name="removeCostRow", type="flash.events.Event")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.model.PanchkarmaCost;
+			
+			private var _pCost:PanchkarmaCost = null;
+			private var commitVal:Boolean = false;
+			
+			public function populate(panchId:Number,panchKarmaCost:PanchkarmaCost):void{
+				if(panchKarmaCost == null){
+					_pCost = new PanchkarmaCost();
+					_pCost.panchkarmaId = panchId;
+					return;
+				}else{
+					_pCost = panchKarmaCost;
+				}
+				commitVal = true;
+				
+				
+			}
+			
+			private function onCreate():void{
+				if(commitVal){
+					if(_pCost.attrName != ""){
+						attrNameId.text = _pCost.attrName;
+					}				
+					
+					if(_pCost.attrValue > 0){
+						attrValueId.text = _pCost.attrValue + "";
+					}else{
+						attrValueId.text = "0";
+					}
+					
+					
+					commitVal = false;
+				}
+			}
+			
+			public function get attrName():String{
+				return attrNameId.text
+			}
+			
+			public function get attrValue():Number{
+				if(!isNaN(parseInt(attrValueId.text))){
+					return parseInt(attrValueId.text);
+				}else{
+					return 0;	
+				}	
+			}
+			
+			public function get costRow():PanchkarmaCost{
+				_pCost.attrName = attrName;
+				_pCost.attrValue = attrValue;
+				return _pCost;
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:TextInput id= "attrNameId">
+	</mx:TextInput>
+	
+	<mx:TextInput id= "attrValueId" restrict="0-9" name="attrValue">
+	</mx:TextInput>
+	
+	<mx:Button name="addCost" label="+"/>
+	<mx:Button name="removeCost" label="-"/>
+	
+</mx:HBox>

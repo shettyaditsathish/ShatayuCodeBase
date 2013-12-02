@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="100%" height="100%" creationComplete="onCreate()">
+	<mx:Script>
+		<![CDATA[
+			import mx.charts.series.LineSeries;
+			import mx.managers.PopUpManager;
+			import mx.controls.Alert;
+			import mx.charts.series.ColumnSeries;
+			import com.shatayu.model.ModelLocatorImp;
+			import com.shatayu.model.Drug;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.event.ShatayuEvent;
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			private var chartData:ArrayCollection;
+			
+			private var monthCollection:Array = ["Jan","Feb","Mar","Apr","May","Jun", "Jul","Aug", "Sep","Oct","Nov","Dec"];
+			
+			private function onCreate():void{
+				startDateCombo.dataProvider = new ArrayCollection(monthCollection);
+				endDateCombo.dataProvider = new ArrayCollection(monthCollection);
+				var yrArr:Array = new Array();
+				
+				for(var i:int = 2005 ;i<2030;i++){
+					yrArr.push(i);
+				}
+				startYearCombo.dataProvider = new ArrayCollection(yrArr);
+				startYearCombo.selectedItem = (new Date()).getFullYear();
+				endYearCombo.dataProvider = new ArrayCollection(yrArr);
+				endYearCombo.selectedItem = (new Date()).getFullYear();
+				//var lineseriesArr:Array = lineCh.series;
+				var series:Array = new Array();
+				
+				var drugListColl:ArrayCollection = new ArrayCollection();
+				for each(var drug:Drug in ModelLocatorImp.getInstance().drugList){
+					
+					var column:ColumnSeries =  new ColumnSeries();
+					column.yField = drug.drugName;
+					column.dataProvider = chartData;
+					column.displayName = drug.drugName;
+					series.push(column); 
+					
+					/* var columnL:LineSeries =  new LineSeries();
+					columnL.yField = drug.drugName;
+					columnL.dataProvider = chartData;
+					columnL.displayName = drug.drugName;
+					columnL.visible = true;
+					lineseriesArr.push(columnL); */
+					
+					
+					var itemObj = {"selected":false,"drug":drug};
+					drugListColl.addItem(itemObj);
+				}
+				//lineCh.series = lineseriesArr;
+				colChart.series = series;
+				
+				tls.dataProvider = drugListColl;
+			}
+			private var resultantDrugList:ArrayCollection = null;
+			private function displayChart():void{
+				var startDate:Date = new Date();
+				trace("Check selected Index "+startDateCombo.selectedIndex);
+				startDate.date = 1;
+				startDate.month = (startDateCombo.selectedIndex) as Number;
+				startDate.hours = 0;
+				startDate.minutes = 0;
+				startDate.seconds = 0; 
+				
+				trace("startDate.month "+startDate.month);
+				startDate.fullYear = (startYearCombo.selectedItem as Number);
+				
+				var endDate:Date = new Date();
+				endDate.date =1;
+				endDate.month = (endDateCombo.selectedIndex)  as Number;
+				endDate.fullYear = (endYearCombo.selectedItem as Number);
+				endDate.hours = 0;
+				endDate.minutes = 0;
+				endDate.seconds = 0;
+				var mp:Object = null;
+				
+				if(all.selected){
+					resultantDrugList = ModelLocatorImp.getInstance().drugList
+				}else{
+					resultantDrugList = new ArrayCollection();
+					for each(var mp:Object in tls.dataProvider){
+						if(mp.selected)
+							resultantDrugList.addItem(mp["drug"] as Drug);
+					}
+				}
+				mp = {"drugList":resultantDrugList,"startDate":startDate,"endDate":endDate};
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.DRUG_MONTHS_CHART_COMMAND,mp,onChartData);
+        		event.dispatch();
+			}
+			
+			public function onChartData(obj:Object):void{
+				chartData =  obj as ArrayCollection;
+			}
+			
+			private function onShowInNumbers():void{
+				
+				var popUP:DrugStatsNumWindow = new DrugStatsNumWindow();
+				popUP.chartData = chartData;
+				popUP.drugList = resultantDrugList;
+				PopUpManager.addPopUp(popUP,this)
+				PopUpManager.centerPopUp(popUP);
+			}
+		]]>
+	</mx:Script>
+	<mx:HBox>
+		<mx:VBox>
+			<mx:HBox>
+			<mx:Label text="Select Start Month"/>
+			<mx:ComboBox id = "startDateCombo" />
+			<mx:Spacer width = "20"/>
+			<mx:Label text="Select Year"/>
+			<mx:ComboBox id = "startYearCombo" />
+		</mx:HBox>
+		
+	
+		<mx:HBox>
+			<mx:Label text="Select End Month"/>
+			<mx:ComboBox id = "endDateCombo" />
+			<mx:Spacer width = "20"/>
+			<mx:Label text="Select Year"/>
+			<mx:ComboBox id = "endYearCombo" />
+		</mx:HBox>
+		</mx:VBox>
+		
+		<mx:HBox>
+			<mx:RadioButtonGroup id="rdbgrp">
+				
+					
+			</mx:RadioButtonGroup>
+			<mx:RadioButton id= "all" label="All" selected="true" group="{rdbgrp}"/>
+			<mx:RadioButton id= "choice" label="Selected ones" group="{rdbgrp}"/>
+			
+			<mx:List id = "tls" itemRenderer="com.shatayu.view.charts.drug.DrugListItemRenderer"
+				height="80" width="200">
+				
+				
+			</mx:List>
+			
+		</mx:HBox>
+	</mx:HBox>
+		
+		<mx:HBox>
+			<mx:Button label="Display Chart" click="displayChart()"/>
+			<mx:Button label="Show In Numbers" click="onShowInNumbers()" visible="{chartData != null?true:false}"/>
+		</mx:HBox>
+		
+		<!--mx:HBox>
+			<mx:RadioButtonGroup id = "rdGroup"/>
+			<mx:RadioButton label = "Column Chart" click="{chartView.selectedIndex =0}" group="{rdGroup}" selected="true"/>
+			<mx:RadioButton label = "Line Chart" click="{chartView.selectedIndex =1}" group="{rdGroup}"/>
+		</mx:HBox-->
+		<mx:ViewStack id = "chartView" width ="100%" height="100%" creationPolicy="all" >
+			
+			<mx:VBox width ="100%" height="100%" verticalGap="0" horizontalGap="0">
+				<mx:ColumnChart id = "colChart" showDataTips="true" dataProvider="{chartData}" width="100%" height="100%">
+					<mx:horizontalAxis>
+						<mx:CategoryAxis categoryField="month" dataProvider="{chartData}"/>
+					</mx:horizontalAxis>
+					
+				</mx:ColumnChart>
+				
+
+			</mx:VBox>
+			<!--mx:VBox width ="100%" height="100%" verticalGap="0" horizontalGap="0">
+				<mx:LineChart id = "lineCh" showDataTips="true" dataProvider="{chartData}" width="100%" height="100%">
+					<mx:horizontalAxis>
+						<mx:CategoryAxis categoryField="month" 
+							dataProvider="{chartData}"/>
+					</mx:horizontalAxis>
+				</mx:LineChart>
+				<mx:Legend dataProvider="{lineCh}"/>
+			</mx:VBox-->
+			
+		</mx:ViewStack>
+		
+		
+</mx:Panel>

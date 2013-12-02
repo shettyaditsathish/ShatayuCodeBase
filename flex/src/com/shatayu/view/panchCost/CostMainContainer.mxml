@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Metadata>
+		[Event(name="onTotal", type="flash.events.Event")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import com.shatayu.model.PanchkarmaCost;
+			import com.shatayu.model.Panchkarma;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			
+			
+			private var _panchKarma:Panchkarma = null;
+			override protected function createChildren():void{
+				super.createChildren();
+				this.addEventListener(MouseEvent.CLICK,onMouseClick);
+				this.addEventListener(KeyboardEvent.KEY_UP,onChange);
+			}
+			
+			private function onChange(ev:Event):void{
+				if((ev.target as DisplayObject).parent.name == "attrValue"){
+					this.dispatchEvent(new Event("onTotal"));
+				}
+			}
+			
+			public  function calc():Number{
+				var totalCost:Number = 0;
+				for(var i:int =0 ;i< this.numChildren;i++){
+					if( !(this.getChildAt(i) is CostRow)){
+						continue;
+					}
+					var row:CostRow = this.getChildAt(i) as CostRow;
+					totalCost = totalCost + row.attrValue;
+				}	
+				
+				return totalCost;
+			}
+			
+			public function getCostCollection():ArrayCollection{
+				var _pcostArr:ArrayCollection = new ArrayCollection();
+				for(var i:int =0 ;i< this.numChildren;i++){
+					if( !(this.getChildAt(i) is CostRow)){
+						continue;
+					}
+					_pcostArr.addItem((this.getChildAt(i) as CostRow).costRow);
+				}
+				return _pcostArr;
+			}
+			
+			private function onMouseClick(ev:MouseEvent):void{
+				var costRow:CostRow = null;
+				if((ev.target as DisplayObject).name == "addCost"){
+					costRow = new CostRow();
+					costRow.populate(_panchKarma.panchkarmaId,null);
+					this.addChild(costRow);
+					this.dispatchEvent(new Event("onTotal"));
+				}else if((ev.target as DisplayObject).name == "removeCost"){
+					if(this.numChildren ==1){
+						return;
+					}
+					this.removeChild((ev.target as DisplayObject).parent);
+					this.dispatchEvent(new Event("onTotal"));
+				}
+			}
+			
+			public function get panchkarma():Panchkarma{
+				return _panchKarma;
+			}
+			
+			public function set panchkarma(panch:Panchkarma):void{
+				_panchKarma = panch;
+				
+				for(var i:int =0 ;i< this.numChildren;i++){
+					if( !(this.getChildAt(i) is CostRow)){
+						continue;
+					}
+					this.removeChild((this.getChildAt(i) as CostRow));
+					i--;
+				}
+				if(panch.panchkarmaCost == null || (panch.panchkarmaCost != null && panch.panchkarmaCost.length == 0)){
+					var costRow:CostRow = new CostRow();
+					costRow.populate(_panchKarma.panchkarmaId,null);
+					this.addChild(costRow);
+					costRow.addEventListener(FlexEvent.CREATION_COMPLETE,onChildCreate);
+					return;
+				}
+				for each(var panchCost:PanchkarmaCost in panch.panchkarmaCost){
+				 	var costRow:CostRow = new CostRow();
+					costRow.populate(_panchKarma.panchkarmaId,panchCost);
+					this.addChild(costRow);
+					costRow.addEventListener(FlexEvent.CREATION_COMPLETE,onChildCreate);
+				 }
+				 
+				
+				
+			}
+			
+			private function onChildCreate(ev:FlexEvent):void{
+				this.dispatchEvent(new Event("onTotal"));	
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="100%" height="100%" implements="com.shatayu.view.interfaces.IView" creationComplete="onCreationComplete()"
+	 show ="onCreationComplete()" horizontalAlign="center"
+	 defaultButton="{submitBtn}">
+	<mx:Script>
+		<![CDATA[
+			import com.shatayu.model.Panchkarma;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.command.AddDrugCommand;
+			import mx.binding.utils.BindingUtils;
+			import com.shatayu.event.ShatayuEvent;
+			import com.shatayu.model.Drug;
+			public var panchkarma:Panchkarma = new Panchkarma();
+			
+			public function onCreationComplete():void{
+				panchkarmaName.text = panchkarma.panchkarmaName;
+				cost.text = isNaN(panchkarma.cost)?"": panchkarma.cost+"";
+				procedure.text = panchkarma.procedure;
+				noOfDays.text = isNaN(panchkarma.noOfDays)?"": panchkarma.noOfDays+"";
+				diseases.text = panchkarma.diseases;
+				details.text = panchkarma.details;
+				BindingUtils.bindProperty(panchkarma,"panchkarmaName",panchkarmaName,"text");
+				BindingUtils.bindProperty(panchkarma,"cost",cost,"text");
+				BindingUtils.bindProperty(panchkarma,"procedure",procedure,"text");
+				BindingUtils.bindProperty(panchkarma,"noOfDays",noOfDays,"text");
+				BindingUtils.bindProperty(panchkarma,"diseases",diseases,"text");
+				BindingUtils.bindProperty(panchkarma,"details",details,"text");
+				
+				
+			}
+			
+			public function set viewData(obj:Object):void{
+				trace("Obj"+obj);
+				if(obj ==  null){
+					panchkarma = new Panchkarma();
+					if(panchkarmaName == null)return;
+					panchkarmaName.text = "";
+					cost.text = "";
+					procedure.text = "";
+					noOfDays.text = "";
+					diseases.text = "";
+					details.text = "";
+					onCreationComplete();
+				}else{
+					panchkarma = new Panchkarma();
+					var panchkarmaTemp:Panchkarma = obj as Panchkarma;
+					panchkarma.panchkarmaId = panchkarmaTemp.panchkarmaId;
+					panchkarma.panchkarmaName = panchkarmaTemp.panchkarmaName;
+					panchkarma.cost = panchkarmaTemp.cost; 
+					panchkarma.procedure = panchkarmaTemp.procedure; 
+					panchkarma.noOfDays = panchkarmaTemp.noOfDays;
+					panchkarma.diseases = panchkarmaTemp.diseases;
+					panchkarma.details = panchkarmaTemp.details;
+				}
+				
+			}
+			
+			public function get viewData():Object{
+				return panchkarma
+			}
+			
+			public function addPanchkarma():void{
+				trace("In mxml 1 "+panchkarma.panchkarmaName);
+				trace("In mxml2 "+panchkarma.panchkarmaId);
+				trace("In mxml3 "+panchkarma.cost);
+				trace("In mxml4 "+panchkarma.procedure);
+				trace("In mxml5 "+panchkarma.noOfDays);
+				trace("In mxml6 "+panchkarma.diseases);
+				trace("In mxml7 "+panchkarma.details);
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.ADD_PANCHKARMA_COMMAND,
+				panchkarma);
+			 	event.dispatch();
+				
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Form>
+		<mx:FormItem label="Panchkarma Name:" fontWeight="bold">
+			<mx:TextInput id = "panchkarmaName"/>
+		</mx:FormItem>
+		<mx:FormItem label="Cost:" fontWeight="bold">
+			<mx:TextInput id = "cost"/>
+		</mx:FormItem>
+		<mx:FormItem label="Procedure:" fontWeight="bold">
+			<mx:TextArea id = "procedure"/>
+		</mx:FormItem>
+		<mx:FormItem label="No Of Days:" fontWeight="bold">
+			<mx:TextInput id = "noOfDays"/>
+		</mx:FormItem>
+		<mx:FormItem label="For Diseases:" fontWeight="bold">
+			<mx:TextInput id = "diseases"/>
+		</mx:FormItem>
+		<mx:FormItem label="Details:" fontWeight="bold">
+			<mx:TextArea id = "details"/>
+		</mx:FormItem>
+		
+	</mx:Form>
+	<mx:Button id = "submitBtn" label="Add/Edit Panchkarma"  styleName="myButton"/>
+	<mx:StringValidator source="{panchkarmaName}" property="text" 
+        required="true" requiredFieldError="This field is compulsory"
+        trigger="{submitBtn}" triggerEvent="click" valid="addPanchkarma()"
+        />
+</mx:VBox>

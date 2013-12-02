@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+	 implements="com.shatayu.view.interfaces.IView" horizontalAlign="center" horizontalGap="30">
+	 <mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.core.Application;
+			import mx.events.CloseEvent;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.event.ShatayuEvent;
+			import com.shatayu.model.ModelLocatorImp;
+			import com.shatayu.event.ViewEvent;
+			import com.shatayu.view.controller.ViewController;
+			import com.shatayu.event.ViewDataHolder;
+			import com.shatayu.model.Drug;
+			
+			public function set viewData(obj:Object):void{
+				if(obj != null && obj["command"] != null){
+	        		processCommands(String(obj["command"]),obj["commandData"])
+	        		return ;
+	        	}
+			}
+			
+			public function get viewData():Object{
+				return null;
+			}
+			
+			private function processCommands(commandStr:String,commandData:Object):void{
+				trace("CAme into process drug delet" + commandStr);
+	        	switch(commandStr){
+					case "deleteDrug":
+						var drg:Drug = commandData as Drug;
+						ModelLocatorImp.getInstance().drugList.removeItemAt(ModelLocatorImp.getInstance().drugList.getItemIndex(drg));
+						break;
+					default:
+						break;
+				}
+	        }
+			
+			private function deleteDrug():void{
+				if(dg.selectedItem == null)return
+				Alert.show("Are you sure you want to delete Drug?", "", 3, Sprite(Application.application), deleteDrugConfirm);
+				
+			}
+			
+			private function deleteDrugConfirm(event:CloseEvent):void {
+	            if (event.detail==Alert.YES){
+	               var evtObj:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.DELETE_DRUG_COMMAND,Drug(dg.selectedItem));
+			 		evtObj.dispatch();
+	            }
+	        }
+			
+			private function onChange():void{
+				if(dg.selectedItem == null)return;
+				var drug:Drug = dg.selectedItem as Drug;
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.ADD_DRUG_VIEW;
+				trace("Check drug  "+drug);
+				viewDataHolder.viewData = drug;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Spacer height = "100"/>
+	
+	<mx:Button label="Delete Drug" click="deleteDrug()" styleName="myButton"/>
+	
+	<mx:DataGrid  id= "dg" dataProvider="{ModelLocatorImp.getInstance().drugList}" doubleClick="onChange()" doubleClickEnabled="true">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Drug Name" dataField="drugName"/>
+			<mx:DataGridColumn headerText="Drug Cost" dataField="drugCost"/>
+			<mx:DataGridColumn headerText="Drug Content" dataField="drugContent"/>
+			<mx:DataGridColumn headerText="Drug Quantity" dataField="quantity"/>
+			<mx:DataGridColumn headerText="Drug Details" dataField="details"/>
+		</mx:columns>
+	</mx:DataGrid>
+</mx:VBox>

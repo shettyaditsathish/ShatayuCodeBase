@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TextInput xmlns:mx="http://www.adobe.com/2006/mxml" change = "onChange()">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
+			public var dataObj:Object;
+			
+			override public function set data(value:Object):void{
+				super.data = value;
+				if(value == null)return;
+				dataObj = value
+				if(!isNaN(dataObj["noOfDays"]))
+					this.text = dataObj["noOfDays"] +"";
+				else
+				  this.text = "";
+			}
+			
+			private function onChange():void{
+				var noOfDays:Number = isNaN(parseInt(this.text))?0:parseInt(this.text);
+				dataObj.noOfDays = noOfDays;
+			}
+			
+		]]>
+	</mx:Script>
+	 
+</mx:TextInput>

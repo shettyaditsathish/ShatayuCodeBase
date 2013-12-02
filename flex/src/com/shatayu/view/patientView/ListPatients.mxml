@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width = "100%" height="100%" implements="com.shatayu.view.interfaces.IView"
+	horizontalAlign="center">
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import com.shatayu.controller.PatientMgmtControllerEvents;
+			import com.shatayu.event.ShatayuEvent;
+			import mx.collections.ArrayCollection;
+			import mx.utils.StringUtil;
+			import com.shatayu.model.Patient;
+			import com.shatayu.view.controller.ViewController;
+			import com.shatayu.event.ViewEvent;
+			import com.shatayu.event.ViewDataHolder;
+			
+			[Bindable] 
+			public var arr:ArrayCollection;
+			
+			public function set viewData(obj:Object):void{
+				try{
+					if(obj != null && obj["command"] != null){
+		        		processCommands(String(obj["command"]),obj["commandData"])
+		        		return ;
+		        	}
+	   			}catch(e:Error){
+	   				
+	   			}
+	   			if(obj == null){
+	   				arr = new ArrayCollection();
+	   				return;
+	   				
+	   			}
+				arr = obj as ArrayCollection;
+			}
+			
+			private function processCommands(commandStr:String,commandData:Object):void{
+	        	switch(commandStr){
+					case "deletePatient":
+						var pat:Patient = commandData as Patient;
+						arr.removeItemAt(arr.getItemIndex(pat));
+						break;
+					default:
+						break;
+				}
+	        }
+	        
+	        
+			public function get viewData():Object{
+				return null;
+			}
+			
+			public function onChange():void{
+				if(dg.selectedItem == null)return;
+				var p:Patient = dg.selectedItem as Patient;
+				var viewDataHolder:ViewDataHolder = new ViewDataHolder();
+				viewDataHolder.viewType = ViewController.ADD_PATIENT_VIEW;
+				viewDataHolder.viewData = p;
+				ViewController.getInstance().dispatchEvent(new ViewEvent(ViewController.SHOW_VIEW,viewDataHolder));
+			}
+			
+			public function set isSearch(value:Boolean):void{
+				//searchBox.visible = value;
+				//searchBox.enabled = value;
+			}
+			
+			private function search():void{
+				var cond:String = "";
+				var searchValue:String = "";
+				
+				if(fname.selected){
+					cond = "firstName";
+					searchValue = StringUtil.trim(inputSearch.text);
+				}else if(lname.selected){
+					cond = "lastName";
+					searchValue = StringUtil.trim(inputSearch.text);
+				}else{
+					cond = "phoneNumber";
+					searchValue = StringUtil.trim(inputSearch.text);
+				}
+				
+				if(StringUtil.trim(inputSearch.text).length <= 0){
+					Alert.show("Enter some value for search");
+					return;
+				}
+				
+				var mp:Object = new Object();
+				mp["searchValue"] = searchValue;
+				mp["cond"] = cond;
+				var event:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.LIST_PATIENT_BY_CRITERIA_COMMAND,mp);
+			 	event.dispatch();
+				
+				
+			}
+			
+			private function deletePatient():void{
+				if(dg.selectedItem == null)return
+				Alert.show("Are you sure you want to delete Patient?", "", 3, Sprite(Application.application), deletePatientConfirm);
+				
+			}
+			
+			private function deletePatientConfirm(event:CloseEvent):void {
+	            if (event.detail==Alert.YES){
+	               var eventObj:ShatayuEvent = new ShatayuEvent(PatientMgmtControllerEvents.DELETE_PATIENT_COMMAND,Patient(dg.selectedItem));
+			 		eventObj.dispatch();
+	            }
+	        }
+			
+		]]>
+	</mx:Script>
+	<mx:Spacer height = "100"/>
+	<mx:VBox id ="searchBox" horizontalAlign="center">
+		<mx:HBox>
+			<mx:RadioButtonGroup id= "searchGroup"/>
+			<mx:RadioButton id = "fname" label="First Name" group="{searchGroup}" selected="true"/>
+			<mx:RadioButton id = "lname" label="Last Name" group="{searchGroup}"/>
+			<mx:RadioButton id = "phoneNum" label="Phine Number" group="{searchGroup}"/>
+		</mx:HBox>
+		<mx:FormItem label="Search Value">
+			<mx:TextInput id="inputSearch"/>
+		</mx:FormItem>
+		<mx:Button label="search" click = "search()" styleName="myButton"/>
+		<mx:Spacer height="30"/>
+	</mx:VBox>	
+	<mx:Button label="Delete Patient" click="deletePatient()" styleName="myButton"/>
+	<mx:DataGrid  id= "dg" dataProvider="{arr}" doubleClick="onChange()"
+		doubleClickEnabled="true" >
+		<mx:columns>
+			<mx:DataGridColumn headerText="First Name" dataField="firstName"/>
+			<mx:DataGridColumn headerText="Last Name" dataField="lastName"/>
+			<mx:DataGridColumn headerText="Age" dataField="age"/>
+			<mx:DataGridColumn headerText="Sex" dataField="sex"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+</mx:VBox>
