@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN"
+		"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	
+   <class name="com.shatayu.model.Patient" table="PATIENT" >
+        <meta attribute="class-description">
+            This class contains the patient details.
+        </meta>
+       
+        <id name="patientId" column="PATIENT_ID" type="long">
+		 	<generator class="increment"/>
+		</id>
+		
+        <property name="firstName" type="string" column="FIRST_NAME" not-null="true" />
+        <property name="lastName" type="string" column="LAST_NAME" not-null="false" />
+		<property name="middleName" type="string" column="MIDDLE_NAME" not-null="false" />
+        <property name="age" type="long" column="AGE" not-null="false" />
+        <property name="sex" type="string" column="SEX" not-null="true" />
+        <property name="initialDate" type="java.sql.Timestamp" column="INITIAL_DATE" not-null="true" />
+        <property name="mobile1" type="string" column="MOBILE1"  />
+        <property name="mobile2" type="string" column="MOBILE2"  />
+        <property name="landline" type="string" column="LANDLINE"  />
+        <property name="knownCases" type="string" column="KNOWN_CASES"  />
+        <property name="history" type="string" column="HISTORY" /> 
+        <property name="address" type="string" column="ADDRESS" /> 
+        
+        <bag name="treatment" cascade="all">
+           <key column="PATIENT_ID"/>
+           
+           <one-to-many class="com.shatayu.model.Treatment"/>
+       </bag>    
+       <bag name="panchkarmaTreatment" cascade="all"  >
+           <key column="PATIENT_ID"/>
+           <one-to-many class="com.shatayu.model.PatientPanchkarma"/>
+       </bag>     
+    </class>
+    <class name="com.shatayu.model.Treatment" table="TREATMENT">
+        <meta attribute="class-description">
+            This class contains the patient treatment details.
+        </meta>
+       
+        
+		<id name="treatmentId" column="TREATMENT_ID" type="long" >
+		 	<generator class="increment"/>
+		</id>
+		<!--property name="patientId" column="PATIENT_ID" type="long" /-->
+		<property name="treatmnetDate" type="java.sql.Timestamp" column="TREATMENT_DATE" not-null="true" />
+       
+        <property name="signsSymptons" type="string" column="SIGNS_SYMPTOMS" not-null="true" />
+        <property name="tongue" type="string" column="TONGUE" not-null="false" />
+        <property name="pulse" type="string" column="PULSE" not-null="false" />
+        <property name="results" type="string" column="RESULTS" not-null="false" />
+        <property name="paymentType" type="string" column="PAYMENT_TYPE" not-null="false" />
+        <property name="paid" type="string" column="Paid" not-null="false" />
+        <property name="amountPaid" type="float" column="AMOUNT_PAID" not-null="false" /> 
+		<property name="balance" type="float" column="BALANCE" not-null="false" />
+        <bag name="treatmentDrug" cascade="all" >
+            <key column="TREATMENT_ID"/>
+            <one-to-many class="com.shatayu.model.TreatmentDrug"/>
+        </bag> 
+        <many-to-one name="patient" column="PATIENT_ID" class = "com.shatayu.model.Patient" />  
+    </class>
+    <class name="com.shatayu.model.Drug" table="DRUG">
+        <meta attribute="class-description">
+            This class contains the drug details.
+        </meta>
+       
+        <id name="drugId" column="DRUG_ID" type="long">
+		 	<generator class="increment"/>
+		</id>
+        <property name="drugName" type="string" column="DRUG_NAME" not-null="true" />
+        <property name="drugCost" type="float" column="DRUG_COST" not-null="false" />
+        <property name="drugContent" type="string" column="CONTENTS" not-null="false"/>
+        <property name="quantity" type="long" column="QUANTITY" not-null="false" />
+         <property name="details" type="string" column="DETAILS" not-null="false" />
+        
+    </class>
+    
+    <class name="com.shatayu.model.TreatmentDrug" table="TREATMENTDRUG">
+        <meta attribute="class-description">
+            This class contains the patient treatment details.
+        </meta>
+         <id name="treatmentDrugId" column="TREATMENT_DRUG_ID" type="long">
+		 	<generator class="increment"/>
+		</id>
+		
+	      <!--property name="treatmentId" column="TREATMENT_ID" type="long"/-->
+	      <property name="drugId" column="DRUG_ID" type="long"/>
+	   
+		<property name="duration" type="string" column="DURATION" not-null="false" />
+		<property name="noOfDays" type="long" column="NOOFDAYS" not-null="false" /> 
+		<many-to-one name="treatment" column="TREATMENT_ID" class = "com.shatayu.model.Treatment" cascade="all"/>  
+    </class>
+    
+    <class name="com.shatayu.model.Panchkarma" table="PANCHKARMA">
+        <meta attribute="class-description">
+            This class contains the patient panchkarma treatment details.
+        </meta>
+         <id name="panchkarmaId" column="PANCHKARMA_ID" type="long">
+		 	<generator class="increment"/>
+		</id>
+		<property name="panchkarmaName" type="string" column="PANCHKARMA_NAME" not-null="true" />
+        <property name="cost" type="float" column="COST" not-null="false" />
+        <property name="procedure" type="string" column="PROCD" not-null="false" />
+        <property name="diseases" type="string" column="DISEASES" not-null="false" />
+        <property name="details" type="string" column="DETAILS" not-null="false" />  
+        <property name="noOfDays" type="long" column="NOOFDAYS" not-null="false" />
+		<bag name="panchkarmaCost" cascade="all" >
+            <key column="PANCHKARMA_ID"/>
+            <one-to-many class="com.shatayu.model.PanchkarmaCost"/>
+        </bag>
+    </class>
+
+	<class name="com.shatayu.model.PanchkarmaCost" table="PANCHKARMA_COST">
+        <meta attribute="class-description">
+            This class contains the panchkarma cost details.
+        </meta>
+         <id name="panchkarmaCostId" column="PANCHKARMA_COST_ID" type="long">
+		 	<generator class="increment"/>
+		</id>
+		<property name="panchkarmaId" column="PANCHKARMA_ID" type="long"/>  
+		<property name="attrName" type="string" column="ATTR_NAME" not-null="true" />
+        <property name="attrValue" type="float" column="ATTR_VALUE" not-null="false" />           
+    </class>
+    
+     <class name="com.shatayu.model.PatientPanchkarma" table="PATIENTPANCHKARMA">
+        <meta attribute="class-description">
+            This class contains the patient treatment details.
+        </meta>
+        <id name="patientPanchId" column="PATIENT_PANCH_ID" type="long">
+		 	<generator class="increment"/>
+		</id>
+        
+		
+      <property name="panchkarmaId" column="PANCHKARMA_ID" type="long"/>  
+		<property name="startDate" type="java.sql.Timestamp" column="START_DATE" not-null="true" />
+		<property name="endDate" type="java.sql.Timestamp" column="END_DATE" not-null="true" />
+		<property name="results" type="string" column="RESULTS" not-null="false" /> 
+		<property name="paid" type="string" column="Paid" not-null="false" /> 
+		<property name="amountPaid" type="float" column="AMOUNT_PAID" not-null="false" /> 
+		<property name="paymentType" type="string" column="PAYMENT_TYPE" not-null="false" />
+		<property name="balance" type="float" column="BALANCE" not-null="false" />
+		<many-to-one name="patient" column="PATIENT_ID" class = "com.shatayu.model.Patient"/> 
+    </class>
+    
+     <class name="com.shatayu.model.Organiser" table="ORGANISER">
+        <meta attribute="class-description">
+            This class contains the patient organiser details.
+        </meta>
+        <id name="organiserId" column="ORGANISER_ID" type="long">
+		 	<generator class="increment"/>
+		</id>
+        
+      	<property name="panchkarmaId" column="PANCHKARMA_ID" type="long"/>  
+		<property name="treatmentDetails" type="string" column="TREATMENT_DETAILS" not-null="false" />
+		<property name="startDate" type="java.sql.Timestamp" column="START_DATE" not-null="true" />
+		<property name="endDate" type="java.sql.Timestamp" column="END_DATE" not-null="true" />
+		<property name="paid" type="string" column="Paid" not-null="false" /> 
+		<property name="status" type="string" column="STATUS" not-null="false" /> 
+		<property name="apptType" type="string" column="APPOINTMENT_TYPE" not-null="false" />
+		<property name="amountPaid" type="float" column="AMOUNT_PAID" not-null="false" />
+		<property name="balance" type="float" column="BALANCE" not-null="false" />
+		<many-to-one name="patient" column="PATIENT_ID" class = "com.shatayu.model.Patient" />
+		<bag name="appointment" cascade="all" >
+            <key column="ORGANISER_ID"/>
+            <one-to-many class="com.shatayu.model.Appointment"/>
+        </bag> 
+		  
+    </class>
+    
+    <class name="com.shatayu.model.Appointment" table="APPOINTMENT">
+        <meta attribute="class-description">
+            This class contains the patient appointment details.
+        </meta>
+        <id name="appointmentId" column="APPOINTMENT_ID" type="long">
+		 	<generator class="increment"/>
+		</id>      	  
+		<property name="apptStartDate" type="java.sql.Timestamp" column="APPOINTMENT_START_DATE" not-null="true" />
+		<property name="apptEndDate" type="java.sql.Timestamp" column="APPOINTMENT_END_DATE" not-null="true" />
+		<property name="apptStatus" type="string" column="STATUS" not-null="false" /> 
+		<many-to-one name="organiser" column="ORGANISER_ID" class = "com.shatayu.model.Organiser" />  
+    </class>
+
+	 <class name="com.shatayu.model.TreatmentPhotos" table="TREATMENT_PICS">
+        <meta attribute="class-description">
+            This class contains the treatment Pics.
+        </meta>
+		<id name="treatmentPhotosId" column="TPHOTO_ID" type="long">
+		 	<generator class="increment"/>
+		</id>    
+		<property name="description" type="string" column="DESCR"/>
+        <property name="imageData" type="binary">
+            <column name="IMAGE" not-null="true" />
+        </property>
+		<many-to-one name="treatment" column="TREATMENT_ID" class = "com.shatayu.model.Treatment" cascade="all"/>
+    </class>
+
+    
+</hibernate-mapping>

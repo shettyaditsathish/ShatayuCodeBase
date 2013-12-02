@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+
+
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location"><value>/WEB-INF/jdbc.properties</value></property>
+	</bean>
+
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName"><value>${jdbc.driverClassName}</value></property>
+		<property name="url"><value>${jdbc.url}</value></property>
+		<property name="username"><value>${jdbc.username}</value></property>
+		<property name="password"><value>${jdbc.password}</value></property>
+	</bean>
+
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+		<property name="dataSource"><ref bean="dataSource"/></property>
+		<property name="mappingResources">
+		<list>
+			<value>ShatayuDB.hbm.xml</value>
+		</list>
+		</property>
+		
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<prop key="hibernate.show_sql">true</prop>
+			</props>
+		</property>
+		
+	</bean>
+
+
+
+	
+	<!--bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory"><ref local="sessionFactory"/></property>
+	</bean-->
+
+	<bean id="EmployeeHIbernateDAO" class="com.shatayu.delegate.EmployeeHibernateDAOImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+
+	<bean id="PatientDao" class="com.shatayu.dao.impl.PatientDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+
+	<bean id="DrugDao" class="com.shatayu.dao.impl.DrugDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+	<bean id="PanchkarmaDao" class="com.shatayu.dao.impl.PanchkarmaDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+	<bean id="TreatmentDao" class="com.shatayu.dao.impl.TreatmentDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+	<bean id="PatientPanchkarmaDao" class="com.shatayu.dao.impl.PatientPanchkarmaDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+
+	<bean id="TreatmentDrugDao" class="com.shatayu.dao.impl.TreatmentDrugDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+
+	<bean id="OrganiserDao" class="com.shatayu.dao.impl.OrganiserDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+
+	<bean id="AppointmentDao" class="com.shatayu.dao.impl.AppointmentDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+	<bean id="TreatmentPhotoDao" class="com.shatayu.dao.impl.TreatmentPhotoDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+	<bean id="PanchkarmaCostDao" class="com.shatayu.dao.impl.PanchkarmaCostDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+
+	<!--bean id="SpringHibernateDao" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+		<property name="transactionManager" ref="txManager"/>
+		<property name="target" ref="EmployeeHIbernateDAO"/>
+		<property name="transactionAttributes">
+			 <props>
+	<prop key="create*">PROPAGATION_REQUIRED</prop>
+	<prop key="update*">PROPAGATION_REQUIRED</prop>
+	<prop key="delete*">PROPAGATION_REQUIRED</prop>
+	<prop key="*">PROPAGATION_REQUIRED,readOnly</prop>
+      </props>
+		</property>
+	</bean-->
+	<bean id="patientMgmtDelegate" class="com.shatayu.delegate.PatientMgmtDelegate"></bean>
+	<bean id="organiserDelegate" class="com.shatayu.delegate.OrganiserDelegate"></bean>
+	<bean id="chartDelegate" class="com.shatayu.delegate.ChartDelegate"></bean>
+
+</beans>

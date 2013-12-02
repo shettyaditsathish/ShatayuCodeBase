@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service id="remoting-service" 
+    class="flex.messaging.services.RemotingService">
+
+    <adapters>
+        <adapter-definition id="java-object" class="flex.messaging.services.remoting.adapters.JavaAdapter" default="true"/>
+    </adapters>
+
+    <default-channels>
+        <channel ref="my-amf"/>
+    </default-channels>
+	
+	<!--destination id="CommonDelegate">
+        <properties>
+            <source>com.shatayu.flex.delegate.CommonDelegate</source>
+        </properties>
+    </destination-->
+
+<destination id="PatientMgmtDelegate">
+<properties>
+<factory>spring</factory>
+<source>patientMgmtDelegate</source>
+</properties>
+</destination>
+
+<destination id="OrganiserDelegate">
+<properties>
+<factory>spring</factory>
+<source>organiserDelegate</source>
+</properties>
+</destination>
+
+<destination id="ChartDelegate">
+<properties>
+<factory>spring</factory>
+<source>chartDelegate</source>
+</properties>
+</destination>
+
+<!--destination id="PatientMgmtDelegate">
+        <properties>
+            <source>src.com.shatayu.delegate.PatientMgmtDelegate</source>
+        </properties>
+    </destination-->
+
+
+</service>
